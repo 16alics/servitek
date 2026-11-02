@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-light: #E3EF26;
+  --color-brand: #076653;
+  --color-brand-dark: #0C342C;
+  --color-brand-darker: #06231D;
+  --color-gradient1-start: #FFFDEE;
+  --color-gradient1-end: #E3EF26;
+}
+
+@layer base {
+  body {
+    @apply m-0 text-slate-800 bg-gradient1-start;
+  }
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #ticket-impresion,
+  #ticket-impresion * {
+    visibility: visible;
+  }
+
+  #ticket-impresion {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+  }
+}
