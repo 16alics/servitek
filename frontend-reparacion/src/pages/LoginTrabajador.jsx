@@ -29,7 +29,8 @@ export default function LoginTrabajador() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ const API_URL = import.meta.env.VITE_API_URL;
+ 
   // Manejador de Inicio de Sesión
   const handleLoginTrabajador = async (e) => {
     e.preventDefault();

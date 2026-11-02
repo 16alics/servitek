@@ -23,7 +23,8 @@ const [errorMessage, setErrorMessage] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, techId: null });
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ const API_URL = import.meta.env.VITE_API_URL;
+ 
   const [servicios, setServicios] = useState([]);
   const [selectedServicio, setSelectedServicio] = useState(null);
 

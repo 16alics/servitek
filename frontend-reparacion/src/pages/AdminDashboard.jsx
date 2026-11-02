@@ -53,7 +53,8 @@ const [cantidadExtra, setCantidadExtra] = useState(1);
     nombre_completo: '', especialidad: '', email: '', password: ''
 
   });
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ const API_URL = import.meta.env.VITE_API_URL;
+ 
 
 const [listaRepuestosAsignados, setListaRepuestosAsignados] = useState([]);
 

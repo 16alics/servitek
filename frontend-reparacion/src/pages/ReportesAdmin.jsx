@@ -24,7 +24,8 @@ export default function ReportesAdmin() {
       setLoading(false);
     }
   };
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ const API_URL = import.meta.env.VITE_API_URL;
+ 
   const handleDownloadPDF = async () => {
     setIsExporting(true);
     

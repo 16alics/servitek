@@ -18,7 +18,8 @@ export default function UsuariosAdmin() {
   const [modalPasswordOpen, setModalPasswordOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [nuevaPassword, setNuevaPassword] = useState('');
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_URL = import.meta.env.VITE_API_URL;
+ 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 

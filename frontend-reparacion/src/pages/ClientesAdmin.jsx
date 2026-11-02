@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import Header from '../components/Header';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ const API_URL = import.meta.env.VITE_API_URL;
+ 
 import { toast } from 'react-toastify';
 const ClientesAdmin = () => {
   const [clientes, setClientes] = useState([]);

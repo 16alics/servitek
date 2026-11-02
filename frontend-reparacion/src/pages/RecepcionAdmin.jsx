@@ -24,7 +24,8 @@ export default function Recepcion() {
   const [clienteEncontrado, setClienteEncontrado] = useState(null);
   const [busquedaRealizada, setBusquedaRealizada] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+ const API_URL = import.meta.env.VITE_API_URL;
+ 
   const [serviciosListos, setServiciosListos] = useState([]);
   const [selectedServicio, setSelectedServicio] = useState(null);
   

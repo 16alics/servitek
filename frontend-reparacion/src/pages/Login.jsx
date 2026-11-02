@@ -15,7 +15,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_URL = import.meta.env.VITE_API_URL;
   const [recoverCode, setRecoverCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
 const irARecuperacion = () => {
