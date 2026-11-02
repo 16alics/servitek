@@ -5,6 +5,7 @@ psycopg2-binary
 pydantic
 cloudinary
 email-validator
+python-multipart
 passlib[bcrypt]
 python-jose[cryptography]
 python-dotenv
