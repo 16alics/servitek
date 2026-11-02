@@ -26,7 +26,7 @@ export default function UsuariosAdmin() {
   // 1. Cargar usuarios del sistema
   const fetchUsuarios = async () => {
     try {
-      const response = await fetch('${API_URL}/api/usuarios/', { // Ajusta tu endpoint backend
+      const response = await fetch(`${API_URL}/api/usuarios/`, { // Ajusta tu endpoint backend
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -117,7 +117,7 @@ const handleChange = (e) => {
   const handleRegistrarPersonal = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('${API_URL}/api/usuarios/', {
+      const response = await fetch(`${API_URL}/api/usuarios/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

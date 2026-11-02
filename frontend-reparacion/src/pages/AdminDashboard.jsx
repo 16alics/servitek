@@ -252,7 +252,7 @@ const handleAgregarTecnico = async (e) => {
             especialidad: techForm.especialidad 
           }
         };
-        await axios.post('${API_URL}/api/usuarios/tecnico', payload);
+        await axios.post(`${API_URL}/api/usuarios/tecnico`, payload);
       }
 
       setShowTechModal(false);
@@ -392,7 +392,7 @@ useEffect(() => {
    // 👇 CARGAR EL INVENTARIO GENERAL PARA TODOS LOS ROLES (Tabla Admin y Select Técnico)
     const cargarInventarioGeneral = async () => {
       try {
-        const resRepuestos = await axios.get('${API_URL}/api/repuestos/');
+        const resRepuestos = await axios.get(`${API_URL}/api/repuestos/`);
         setListaRepuestos(resRepuestos.data);
       } catch (error) {
         console.error("Error al cargar el inventario general:", error);
@@ -591,7 +591,7 @@ const cargarRepuestosGlobal = async () => {
 
     try {
 
-      const res = await axios.get('${API_URL}/api/repuestos/');
+      const res = await axios.get(`${API_URL}/api/repuestos/`);
 
       setListaRepuestosDisponibles(res.data);
 
@@ -829,9 +829,9 @@ const handleUpdateService = async (nuevoEstado) => {
 
       const [resUsuarios, resServicios] = await Promise.all([
 
-        axios.get('${API_URL}/api/usuarios/'),
+        axios.get(`${API_URL}/api/usuarios/`),
 
-        axios.get('${API_URL}/api/servicios/')
+        axios.get(`${API_URL}/api/servicios/`)
 
       ]);
 
@@ -899,19 +899,19 @@ const handleUpdateService = async (nuevoEstado) => {
 
       // CORREGIDO: Rutas apuntando correctamente a /api/usuarios/...
 
-      const resClientes = await axios.get('${API_URL}/api/usuarios/clientes');
+      const resClientes = await axios.get(`${API_URL}/api/usuarios/clientes');
 
       setClientes(resClientes.data);
 
      
 
-      const resTecnicos = await axios.get('${API_URL}/api/usuarios/tecnicos');
+      const resTecnicos = await axios.get(`${API_URL}/api/usuarios/tecnicos');
 
       setTecnicos(resTecnicos.data);
 
 
 
-      const resServicios = await axios.get('${API_URL}/api/servicios/');
+      const resServicios = await axios.get(`${API_URL}/api/servicios/`);
 
       setServicios(resServicios.data);
 
@@ -1032,19 +1032,19 @@ const cargarDatosDashboard = async () => {
 
     // Ajusta las URLs según tus endpoints reales de FastAPI
 
-    const resClientes = await axios.get('${API_URL}/api/clientes/');
+    const resClientes = await axios.get(`${API_URL}/api/clientes/`);
 
     setListaClientes(resClientes.data);
 
 
 
-    const resTecnicos = await axios.get('${API_URL}/api/tecnicos/'); // o /api/usuarios/tecnicos
+    const resTecnicos = await axios.get(`${API_URL}/api/tecnicos/`); // o /api/usuarios/tecnicos
 
     setListaTecnicos(resTecnicos.data);
 
 
 
-    const resRepuestos = await axios.get('${API_URL}/repuestos/');
+    const resRepuestos = await axios.get(`${API_URL}/repuestos/`);
 
     setListaRepuestos(resRepuestos.data);
 
@@ -2165,7 +2165,7 @@ if (userRole === 'recepcionista') {
       <form onSubmit={async (e) => {
         e.preventDefault();
         try {
-          await axios.post('${API_URL}/api/repuestos/', {
+          await axios.post(`${API_URL}/api/repuestos/`, {
             nombre: repuestoForm.nombre,
             descripcion: repuestoForm.descripcion,
             costo: parseFloat(repuestoForm.costo),

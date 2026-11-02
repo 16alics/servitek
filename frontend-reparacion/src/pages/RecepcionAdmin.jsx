@@ -96,7 +96,7 @@ export default function Recepcion() {
   useEffect(() => {
     const obtenerTecnicos = async () => {
       try {
-        const response = await axios.get('${API_URL}/api/usuarios/');
+        const response = await axios.get(`${API_URL}/api/usuarios/`);
         const tecnicosFiltrados = response.data.filter(
           u => u.rol && u.rol.toLowerCase() === 'tecnico'
         );
@@ -111,7 +111,7 @@ export default function Recepcion() {
 
   const cargarServiciosListos = async () => {
     try {
-      const response = await axios.get('${API_URL}/api/servicios/?estado=listo para entrega');
+      const response = await axios.get(`${API_URL}/api/servicios/?estado=listo para entrega');
       
       const serviciosMapeados = response.data.map(serv => {
         // Extraemos de forma segura tanto si viene plano como si viene dentro de 'equipo'
@@ -261,7 +261,7 @@ export default function Recepcion() {
 
     setCargando(true);
     try {
-      const response = await axios.post('${API_URL}/api/usuarios/cliente', {
+      const response = await axios.post(`${API_URL}/api/usuarios/cliente', {
         usuario: {
           email: nuevoCliente.email,
           password: ""
