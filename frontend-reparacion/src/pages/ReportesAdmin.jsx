@@ -16,7 +16,7 @@ export default function ReportesAdmin() {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/servicios/estadisticas/admin');
+      const res = await axios.get('https://servitek.vercel.app/api/servicios/estadisticas/admin');
       setStats(res.data);
     } catch (error) {
       console.error(error);

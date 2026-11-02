@@ -36,7 +36,7 @@ const handleLogin = async (e) => {
       formData.append('password', password);
 
       // 🔒 Petición al endpoint exclusivo de clientes en FastAPI
-      const response = await axios.post('http://localhost:8000/auth/login-cliente', formData, {
+      const response = await axios.post('https://servitek.vercel.app/auth/login-cliente', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 
@@ -75,7 +75,7 @@ const handlePrimerIngreso = async (e) => {
     // Obtenemos el correo guardado temporalmente
     const emailUsuario = localStorage.getItem('tempEmail') || username; 
 
-    await axios.post('http://localhost:8000/auth/cambiar-clave-primer-ingreso', {
+    await axios.post('https://servitek.vercel.app/auth/cambiar-clave-primer-ingreso', {
       email: emailUsuario,
       nueva_password: newPassword
     });
@@ -102,7 +102,7 @@ const handlePrimerIngreso = async (e) => {
     setError('');
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/auth/recuperar-clave', { email: username });
+      const response = await axios.post('https://servitek.vercel.app/auth/recuperar-clave', { email: username });
       setView('reset');
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al solicitar recuperación');
@@ -126,7 +126,7 @@ const handleReset = async (e) => {
   console.log("Enviando a /reset-clave:", datosAEnviar); // 🔍 Revisa esto en la consola (F12 -> Console)
 
   try {
-    await axios.post('http://localhost:8000/auth/reset-clave', datosAEnviar);
+    await axios.post('https://servitek.vercel.app/auth/reset-clave', datosAEnviar);
 
     toast.success("¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.");
     setView('login');
@@ -156,14 +156,14 @@ const handleReset = async (e) => {
         }
       };
       
-      await axios.post('http://localhost:8000/api/usuarios/registrar', payload);
+      await axios.post('https://servitek.vercel.app/api/usuarios/registrar', payload);
       
       // Auto login after registration
       const formData = new URLSearchParams();
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await axios.post('http://localhost:8000/auth/login-cliente', formData, {
+      const response = await axios.post('https://servitek.vercel.app/auth/login-cliente', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 

@@ -94,7 +94,7 @@ export default function Recepcion() {
   useEffect(() => {
     const obtenerTecnicos = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/usuarios/');
+        const response = await axios.get('https://servitek.vercel.app/api/usuarios/');
         const tecnicosFiltrados = response.data.filter(
           u => u.rol && u.rol.toLowerCase() === 'tecnico'
         );
@@ -109,7 +109,7 @@ export default function Recepcion() {
 
   const cargarServiciosListos = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/servicios/?estado=listo para entrega');
+      const response = await axios.get('https://servitek.vercel.app/api/servicios/?estado=listo para entrega');
       
       const serviciosMapeados = response.data.map(serv => {
         // Extraemos de forma segura tanto si viene plano como si viene dentro de 'equipo'
@@ -149,7 +149,7 @@ export default function Recepcion() {
     if (!selectedServicio) return;
 
     try {
-      const response = await axios.put(`http://localhost:8000/api/servicios/${selectedServicio.id}/estado`, {
+      const response = await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/estado`, {
         estado: "Entregado"
       });
 
@@ -200,7 +200,7 @@ export default function Recepcion() {
 
     try {
       setCargando(true);
-      const response = await axios.get(`http://localhost:8000/api/servicios/recepcion/pendientes/${dniValidarWeb.trim()}`);
+      const response = await axios.get(`https://servitek.vercel.app/api/servicios/recepcion/pendientes/${dniValidarWeb.trim()}`);
       
       if (response.data.length === 0) {
         toast.success("No se encontraron solicitudes pendientes para este DNI.");
@@ -244,7 +244,7 @@ export default function Recepcion() {
     setMensaje(null);
 
     try {
-      const response = await axios.get(`http://localhost:8000/api/servicios/clientes/buscar/${dniBusqueda.trim()}`);
+      const response = await axios.get(`https://servitek.vercel.app/api/servicios/clientes/buscar/${dniBusqueda.trim()}`);
       setClienteEncontrado(response.data);
     } catch (error) {
       setClienteEncontrado(null);
@@ -259,7 +259,7 @@ export default function Recepcion() {
 
     setCargando(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/usuarios/cliente', {
+      const response = await axios.post('https://servitek.vercel.app/api/usuarios/cliente', {
         usuario: {
           email: nuevoCliente.email,
           password: ""
@@ -300,7 +300,7 @@ export default function Recepcion() {
       const servicioId = formDataTicket.id; 
       const tecnicoId = formDataTicket.tecnicoId; 
 
-      await axios.put(`http://localhost:8000/api/servicios/${servicioId}/asignar-tecnico`, {
+      await axios.put(`https://servitek.vercel.app/api/servicios/${servicioId}/asignar-tecnico`, {
         tecnico_id: parseInt(tecnicoId)
       });
 
@@ -329,7 +329,7 @@ export default function Recepcion() {
       let resultadoData = null;
 
       if (formDataTicket.id !== null && formDataTicket.id !== undefined && formDataTicket.id !== '') {
-        const res = await axios.put(`http://localhost:8000/api/servicios/${formDataTicket.id}/asignar`, {
+        const res = await axios.put(`https://servitek.vercel.app/api/servicios/${formDataTicket.id}/asignar`, {
           tecnico_id: parseInt(formDataTicket.tecnicoId),
           estado: "Recibido",
           marca: formDataTicket.marcaModelo,
@@ -353,7 +353,7 @@ export default function Recepcion() {
         });
 
       } else {
-        const res = await axios.post(`http://localhost:8000/api/servicios/directo`, {
+        const res = await axios.post(`https://servitek.vercel.app/api/servicios/directo`, {
           cliente_id: clienteEncontrado.id,
           marca: formDataTicket.marcaModelo,
           modelo: "General", 
