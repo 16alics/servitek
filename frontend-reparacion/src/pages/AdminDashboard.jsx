@@ -899,13 +899,13 @@ const handleUpdateService = async (nuevoEstado) => {
 
       // CORREGIDO: Rutas apuntando correctamente a /api/usuarios/...
 
-      const resClientes = await axios.get(`${API_URL}/api/usuarios/clientes');
+      const resClientes = await axios.get(`${API_URL}/api/usuarios/clientes`);
 
       setClientes(resClientes.data);
 
      
 
-      const resTecnicos = await axios.get(`${API_URL}/api/usuarios/tecnicos');
+      const resTecnicos = await axios.get(`${API_URL}/api/usuarios/tecnicos`);
 
       setTecnicos(resTecnicos.data);
 
