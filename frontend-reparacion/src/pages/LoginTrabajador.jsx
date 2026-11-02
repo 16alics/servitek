@@ -29,7 +29,7 @@ export default function LoginTrabajador() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   // Manejador de Inicio de Sesión
   const handleLoginTrabajador = async (e) => {
     e.preventDefault();
@@ -41,7 +41,7 @@ export default function LoginTrabajador() {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await axios.post('https://servitek.vercel.app/auth/login', formData, {
+      const response = await axios.post('${API_URL}/auth/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -98,7 +98,7 @@ export default function LoginTrabajador() {
     try {
       const emailUsuario = localStorage.getItem('tempEmail') || username;
 
-      await axios.post('https://servitek.vercel.app/auth/cambiar-clave-primer-ingreso', {
+      await axios.post('${API_URL}/auth/cambiar-clave-primer-ingreso', {
         email: emailUsuario,
         nueva_password: newPassword
       });

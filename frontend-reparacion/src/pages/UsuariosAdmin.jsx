@@ -18,14 +18,14 @@ export default function UsuariosAdmin() {
   const [modalPasswordOpen, setModalPasswordOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [nuevaPassword, setNuevaPassword] = useState('');
-  
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
   // 1. Cargar usuarios del sistema
   const fetchUsuarios = async () => {
     try {
-      const response = await fetch('https://servitek.vercel.app/api/usuarios/', { // Ajusta tu endpoint backend
+      const response = await fetch('${API_URL}/api/usuarios/', { // Ajusta tu endpoint backend
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -44,7 +44,7 @@ export default function UsuariosAdmin() {
   // 2. Cambiar Rol de Usuario
   const handleCambiarRol = async (id, nuevoRol) => {
     try {
-      const res = await fetch(`https://servitek.vercel.app/api/usuarios/${id}/rol`, {
+      const res = await fetch(`${API_URL}/api/usuarios/${id}/rol`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ export default function UsuariosAdmin() {
   // 3. Activar / Inhabilitar Cuenta
   const handleToggleEstado = async (id, estadoActual) => {
     try {
-      const res = await fetch(`https://servitek.vercel.app/api/usuarios/${id}/estado`, {
+      const res = await fetch(`${API_URL}/api/usuarios/${id}/estado`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export default function UsuariosAdmin() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`https://servitek.vercel.app/api/usuarios/${usuarioSeleccionado.id}/password`, {
+      const res = await fetch(`${API_URL}/api/usuarios/${usuarioSeleccionado.id}/password`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const handleChange = (e) => {
   const handleRegistrarPersonal = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://servitek.vercel.app/api/usuarios/', {
+      const response = await fetch('${API_URL}/api/usuarios/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

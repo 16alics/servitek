@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import Header from '../components/Header';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 import { toast } from 'react-toastify';
 const ClientesAdmin = () => {
   const [clientes, setClientes] = useState([]);
@@ -14,7 +15,7 @@ useEffect(() => {
       try {
         setLoading(true);
         // Asegúrate de que esta ruta devuelva el JSON con clientes, equipos y servicios anidados
-        const response = await axios.get('https://servitek.vercel.app/api/usuarios/clientes/detallado'); 
+        const response = await axios.get('${API_URL}/api/usuarios/clientes/detallado'); 
         
         // Si tu endpoint es /api/usuarios/clientes y lo modificaste para que traiga los equipos:
         setClientes(Array.isArray(response.data) ? response.data : []);

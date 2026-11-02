@@ -7,6 +7,7 @@ export default function RastreoPublico() {
   const [codigo, setCodigo] = useState('');
   const [resultado, setResultado] = useState(null);
   const [loading, setLoading] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -19,7 +20,7 @@ export default function RastreoPublico() {
     setResultado(null);
     
     try {
-      const res = await axios.get(`https://servitek.vercel.app/api/servicios/rastreo/${codigo.trim().toUpperCase()}`);
+      const res = await axios.get(`${API_URL}/api/servicios/rastreo/${codigo.trim().toUpperCase()}`);
       setResultado(res.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'No se encontró ninguna orden con ese código. Por favor verifique e intente nuevamente.');

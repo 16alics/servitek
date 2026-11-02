@@ -16,7 +16,7 @@ export default function ReportesAdmin() {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get('https://servitek.vercel.app/api/servicios/estadisticas/admin');
+      const res = await axios.get('${API_URL}/api/servicios/estadisticas/admin');
       setStats(res.data);
     } catch (error) {
       console.error(error);
@@ -24,7 +24,7 @@ export default function ReportesAdmin() {
       setLoading(false);
     }
   };
-
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const handleDownloadPDF = async () => {
     setIsExporting(true);
     

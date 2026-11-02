@@ -53,7 +53,7 @@ const [cantidadExtra, setCantidadExtra] = useState(1);
     nombre_completo: '', especialidad: '', email: '', password: ''
 
   });
-const API_URL = import.meta.env.VITE_API_URL || 'https://servitek.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const [listaRepuestosAsignados, setListaRepuestosAsignados] = useState([]);
 
@@ -162,7 +162,7 @@ const handleEliminarTecnico = async (id) => {
     if (!window.confirm("¿Estás seguro de inhabilitar a este técnico?")) return;
 
     try {
-      await axios.delete(`https://servitek.vercel.app/api/usuarios/tecnico/${id}`);
+      await axios.delete(`${API_URL}/api/usuarios/tecnico/${id}`);
       // Aquí puedes llamar a tu función para recargar la lista, ej: cargarTecnicos();
       toast.success("Técnico inhabilitado correctamente");
     } catch (err) {
@@ -186,7 +186,7 @@ const handleSaveEvidenciasYFinalizar = async () => {
         const formData = new FormData();
         formData.append("file", file);
         
-        await axios.post(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/fotos`, formData, {
+        await axios.post(`${API_URL}/api/servicios/${selectedServicio.id}/fotos`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       }
@@ -194,7 +194,7 @@ const handleSaveEvidenciasYFinalizar = async () => {
 
     // 2. Cambiar el estado del servicio a "Listo para entrega"
     const nuevoEstado = "Listo para entrega";
-    await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/estado`, {
+    await axios.put(`${API_URL}/api/servicios/${selectedServicio.id}/estado`, {
       estado: nuevoEstado
     });
 
@@ -233,7 +233,7 @@ const handleAgregarTecnico = async (e) => {
     try {
      if (editingTechId) {
         // MODO EDICIÓN (PUT)
-        await axios.put(`https://servitek.vercel.app/api/usuarios/tecnico/${editingTechId}`, {
+        await axios.put(`${API_URL}/api/usuarios/tecnico/${editingTechId}`, {
           nombre_completo: techForm.nombre_completo,
           especialidad: techForm.especialidad
         });
@@ -251,7 +251,7 @@ const handleAgregarTecnico = async (e) => {
             especialidad: techForm.especialidad 
           }
         };
-        await axios.post('https://servitek.vercel.app/api/usuarios/tecnico', payload);
+        await axios.post('${API_URL}/api/usuarios/tecnico', payload);
       }
 
       setShowTechModal(false);
@@ -312,7 +312,7 @@ const [repuestosSeleccionados, setRepuestosSeleccionados] = useState([]);
 
     const response = await axios.post(
 
-      `https://servitek.vercel.app/api/servicios/${selectedServicio.id}/actividades`,
+      `${API_URL}/api/servicios/${selectedServicio.id}/actividades`,
 
       {
 
@@ -391,7 +391,7 @@ useEffect(() => {
    // 👇 CARGAR EL INVENTARIO GENERAL PARA TODOS LOS ROLES (Tabla Admin y Select Técnico)
     const cargarInventarioGeneral = async () => {
       try {
-        const resRepuestos = await axios.get('https://servitek.vercel.app/api/repuestos/');
+        const resRepuestos = await axios.get('${API_URL}/api/repuestos/');
         setListaRepuestos(resRepuestos.data);
       } catch (error) {
         console.error("Error al cargar el inventario general:", error);
@@ -441,7 +441,7 @@ const handleQuitarActividad = async (index, actividadId) => {
 
     if (actividadId) {
 
-      await axios.delete(`https://servitek.vercel.app/api/servicios/actividades/${actividadId}`);
+      await axios.delete(`${API_URL}/api/servicios/actividades/${actividadId}`);
 
     }
 
@@ -464,8 +464,8 @@ const handleQuitarActividad = async (index, actividadId) => {
 const handleToggleEstadoTecnico = async (t) => {
   try {
     const endpoint = t.activo 
-      ? `https://servitek.vercel.app/api/usuarios/tecnico/${t.id}/inhabilitar`
-      : `https://servitek.vercel.app/api/usuarios/tecnico/${t.id}/activar`;
+      ? `${API_URL}/api/usuarios/tecnico/${t.id}/inhabilitar`
+      : `${API_URL}/api/usuarios/tecnico/${t.id}/activar`;
 
     await axios.put(endpoint);
     
@@ -539,7 +539,7 @@ useEffect(() => {
     const cargarDetallesServicio = async () => {
       try {
         // 1. Consultar el diagnóstico y datos del servicio
-        const resDiagnostico = await axios.get(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/diagnostico`);
+        const resDiagnostico = await axios.get(`${API_URL}/api/servicios/${selectedServicio.id}/diagnostico`);
         if (resDiagnostico.data) {
           setDiagForm({
             falla_encontrada: resDiagnostico.data.falla_encontrada || '',
@@ -547,7 +547,7 @@ useEffect(() => {
           });
 
           // 2. Consultamos las actividades
-          const resActividades = await axios.get(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/actividades`);
+          const resActividades = await axios.get(`${API_URL}/api/servicios/${selectedServicio.id}/actividades`);
           const listaAct = resActividades.data || [];
           const costoBaseRegistrado = parseFloat(resDiagnostico.data.costo_base ?? resDiagnostico.data.costo_estimado) || 20;
         setCostoEstimado(costoBaseRegistrado);
@@ -557,7 +557,7 @@ useEffect(() => {
 
           // 3. Consultar los repuestos (si tu API tiene la ruta de repuestos separada)
           try {
-            const resRepuestos = await axios.get(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/repuestos`);
+            const resRepuestos = await axios.get(`${API_URL}/api/servicios/${selectedServicio.id}/repuestos`);
             setListaRepuestosAsignados(resRepuestos.data || []);
           } catch (errRep) {
             // Si la ruta de repuestos no existe o falla, dejamos la lista vacía o limpia
@@ -590,7 +590,7 @@ const cargarRepuestosGlobal = async () => {
 
     try {
 
-      const res = await axios.get('https://servitek.vercel.app/api/repuestos/');
+      const res = await axios.get('${API_URL}/api/repuestos/');
 
       setListaRepuestosDisponibles(res.data);
 
@@ -628,7 +628,7 @@ const handleSubirFoto = async (e) => {
       formData.append("file", file); // Debe coincidir con UploadFile en FastAPI
 
       await axios.post(
-        `https://servitek.vercel.app/api/servicios/${selectedServicio.id}/fotos`,
+        `${API_URL}/api/servicios/${selectedServicio.id}/fotos`,
         formData,
         {
           headers: {
@@ -794,7 +794,7 @@ const handleUpdateService = async (nuevoEstado) => {
 
   try {
 
-    await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/estado`, {
+    await axios.put(`${API_URL}/api/servicios/${selectedServicio.id}/estado`, {
 
       estado: nuevoEstado
 
@@ -828,9 +828,9 @@ const handleUpdateService = async (nuevoEstado) => {
 
       const [resUsuarios, resServicios] = await Promise.all([
 
-        axios.get('https://servitek.vercel.app/api/usuarios/'),
+        axios.get('${API_URL}/api/usuarios/'),
 
-        axios.get('https://servitek.vercel.app/api/servicios/')
+        axios.get('${API_URL}/api/servicios/')
 
       ]);
 
@@ -878,7 +878,7 @@ const handleUpdateService = async (nuevoEstado) => {
 
     try {
 
-      const res = await axios.get(`https://servitek.vercel.app/api/servicios/cliente/${email}`);
+      const res = await axios.get(`${API_URL}/api/servicios/cliente/${email}`);
 
       setServicios(res.data);
 
@@ -898,19 +898,19 @@ const handleUpdateService = async (nuevoEstado) => {
 
       // CORREGIDO: Rutas apuntando correctamente a /api/usuarios/...
 
-      const resClientes = await axios.get('https://servitek.vercel.app/api/usuarios/clientes');
+      const resClientes = await axios.get('${API_URL}/api/usuarios/clientes');
 
       setClientes(resClientes.data);
 
      
 
-      const resTecnicos = await axios.get('https://servitek.vercel.app/api/usuarios/tecnicos');
+      const resTecnicos = await axios.get('${API_URL}/api/usuarios/tecnicos');
 
       setTecnicos(resTecnicos.data);
 
 
 
-      const resServicios = await axios.get('https://servitek.vercel.app/api/servicios/');
+      const resServicios = await axios.get('${API_URL}/api/servicios/');
 
       setServicios(resServicios.data);
 
@@ -932,7 +932,7 @@ const cambiarEstadoRapido = async (nuevoEstado) => {
   }
 
   try {
-    await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/estado`, {
+    await axios.put(`${API_URL}/api/servicios/${selectedServicio.id}/estado`, {
       estado: nuevoEstado
     });
 
@@ -979,7 +979,7 @@ const handleSaveDiagnostico = async () => {
     };
 
     // Guardamos el diagnóstico en el backend
-    await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/diagnostico`, datosAEnviar);
+    await axios.put(`${API_URL}/api/servicios/${selectedServicio.id}/diagnostico`, datosAEnviar);
 
     // 2. Subir fotos pendientes a Cloudinary (si el usuario adjuntó alguna de forma opcional)
     if (selectedFiles && selectedFiles.length > 0) {
@@ -987,7 +987,7 @@ const handleSaveDiagnostico = async () => {
         const formData = new FormData();
         formData.append("file", file);
         
-        await axios.post(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}/fotos`, formData, {
+        await axios.post(`${API_URL}/api/servicios/${selectedServicio.id}/fotos`, formData, {
           headers: { "Content-Type": "multipart/form-data" }
         });
       }
@@ -1031,19 +1031,19 @@ const cargarDatosDashboard = async () => {
 
     // Ajusta las URLs según tus endpoints reales de FastAPI
 
-    const resClientes = await axios.get('https://servitek.vercel.app/api/clientes/');
+    const resClientes = await axios.get('${API_URL}/api/clientes/');
 
     setListaClientes(resClientes.data);
 
 
 
-    const resTecnicos = await axios.get('https://servitek.vercel.app/api/tecnicos/'); // o /api/usuarios/tecnicos
+    const resTecnicos = await axios.get('${API_URL}/api/tecnicos/'); // o /api/usuarios/tecnicos
 
     setListaTecnicos(resTecnicos.data);
 
 
 
-    const resRepuestos = await axios.get('https://servitek.vercel.app/repuestos/');
+    const resRepuestos = await axios.get('${API_URL}/repuestos/');
 
     setListaRepuestos(resRepuestos.data);
 
@@ -1303,7 +1303,7 @@ if (userRole === 'recepcionista') {
         <form onSubmit={async (e) => {
           e.preventDefault();
           try {
-            await axios.put(`https://servitek.vercel.app/api/repuestos/${editingRepuestoId}`, {
+            await axios.put(`${API_URL}/api/repuestos/${editingRepuestoId}`, {
               nombre: repuestoEditForm.nombre,
               descripcion: repuestoEditForm.descripcion,
               costo: parseFloat(repuestoEditForm.costo)
@@ -1482,7 +1482,7 @@ if (userRole === 'recepcionista') {
 
                 // Cargar diagnóstico existente
                 try {
-                  const resDiag = await axios.get(`https://servitek.vercel.app/api/servicios/${s.id}/diagnostico`);
+                  const resDiag = await axios.get(`${API_URL}/api/servicios/${s.id}/diagnostico`);
                   setDiagForm({
                     falla_encontrada: resDiag.data?.falla_encontrada || s.descripcion_falla || '',
                     observaciones: resDiag.data?.observaciones || ''
@@ -1498,7 +1498,7 @@ if (userRole === 'recepcionista') {
                 
                 // CARGAR LA LISTA DE FOTOS
                 try {
-                  const resFotos = await axios.get(`https://servitek.vercel.app/api/servicios/${s.id}/fotos`);
+                  const resFotos = await axios.get(`${API_URL}/api/servicios/${s.id}/fotos`);
                   setListaFotos(resFotos.data);
                 } catch (error) {
                   setListaFotos([]);
@@ -1508,10 +1508,10 @@ if (userRole === 'recepcionista') {
 
                 if (["enreparacion", "esperandoaprobacion", "reparado", "listoparacarega", "entregado"].includes(estadoNorm)) {
                   try {
-                    const resAct = await axios.get(`https://servitek.vercel.app/api/servicios/${s.id}/actividades`);
+                    const resAct = await axios.get(`${API_URL}/api/servicios/${s.id}/actividades`);
                     setListaActividades(resAct.data);
 
-                    const resRep = await axios.get(`https://servitek.vercel.app/api/servicios/${s.id}/repuestos`);
+                    const resRep = await axios.get(`${API_URL}/api/servicios/${s.id}/repuestos`);
                     setListaRepuestosAsignados(resRep.data);
                   } catch (error) {
                     console.error("Error al cargar datos guardados:", error);
@@ -2111,7 +2111,7 @@ if (userRole === 'recepcionista') {
       <form onSubmit={async (e) => {
         e.preventDefault();
         try {
-          await axios.put(`https://servitek.vercel.app/api/repuestos/${repuestoParaStock.id}/agregar-stock`, {
+          await axios.put(`${API_URL}/api/repuestos/${repuestoParaStock.id}/agregar-stock`, {
             cantidad: parseInt(cantidadExtra)
           });
           toast.success("¡Stock actualizado con éxito!");
@@ -2164,7 +2164,7 @@ if (userRole === 'recepcionista') {
       <form onSubmit={async (e) => {
         e.preventDefault();
         try {
-          await axios.post('https://servitek.vercel.app/api/repuestos/', {
+          await axios.post('${API_URL}/api/repuestos/', {
             nombre: repuestoForm.nombre,
             descripcion: repuestoForm.descripcion,
             costo: parseFloat(repuestoForm.costo),

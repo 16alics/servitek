@@ -4,6 +4,7 @@ import axios from 'axios';
 import QRCode from 'react-qr-code';
 import Header from '../components/Header';
 import QRModal from '../components/QRModal';
+
 import { toast } from 'react-toastify';
 import { NotificacionesCampana } from '../components/NotificacionesCampana';
 export default function Dashboard() {
@@ -22,7 +23,7 @@ const [errorMessage, setErrorMessage] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, techId: null });
-
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const [servicios, setServicios] = useState([]);
   const [selectedServicio, setSelectedServicio] = useState(null);
 
@@ -81,10 +82,10 @@ const [listaFotos, setListaFotos] = useState([]);
 
   const fetchTechData = async (email) => {
     try {
-      const resUsuarios = await axios.get('https://servitek.vercel.app/usuarios/tecnicos');
+      const resUsuarios = await axios.get('${API_URL}/usuarios/tecnicos');
       const tecnicoAuth = resUsuarios.data.find(t => t.usuario?.email === email);
       
-      const resServicios = await axios.get('https://servitek.vercel.app/servicios');
+      const resServicios = await axios.get('${API_URL}/servicios');
       if (tecnicoAuth) {
         const misServicios = resServicios.data.filter(s => s.tecnico_id === tecnicoAuth.id);
         setServicios(misServicios);
@@ -99,7 +100,7 @@ const [listaFotos, setListaFotos] = useState([]);
   const fetchClientData = async (email) => {
   try {
     // Asegúrate de que la ruta coincida con tu backend (ej. /servicios/cliente/... o con prefijo si lo lleva)
-    const response = await axios.get(`https://servitek.vercel.app/api/servicios/cliente/${email}`);
+    const response = await axios.get(`${API_URL}/api/servicios/cliente/${email}`);
     setServicios(response.data); // O el estado donde guardes los equipos/servicios
   } catch (err) {
     console.error("Error al cargar los servicios del cliente:", err);
@@ -107,7 +108,7 @@ const [listaFotos, setListaFotos] = useState([]);
 };
 const fetchPerfilCliente = async () => {
   try {
-    const res = await axios.get(`https://servitek.vercel.app/api/usuarios/perfil/${userEmail}`);
+    const res = await axios.get(`${API_URL}/api/usuarios/perfil/${userEmail}`);
     setPerfilForm({
       nombre_completo: res.data.nombre_completo || '',
       telefono: res.data.telefono || '',
@@ -123,7 +124,7 @@ const handleUpdatePerfil = async (e) => {
     e.preventDefault();
     setPerfilLoading(true);
     try {
-      await axios.put(`https://servitek.vercel.app/api/usuarios/perfil/${userEmail}`, perfilForm);
+      await axios.put(`${API_URL}/api/usuarios/perfil/${userEmail}`, perfilForm);
       toast.success("Perfil actualizado correctamente");
       setShowPerfilModal(false);
     } catch (error) {
@@ -136,7 +137,7 @@ const handleUpdatePerfil = async (e) => {
   const handleUpdateService = async (estadoStr) => {
     if (!selectedServicio) return;
     try {
-      await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicio.id}?estado=${estadoStr}`);
+      await axios.put(`${API_URL}/api/servicios/${selectedServicio.id}?estado=${estadoStr}`);
       setSelectedServicio({...selectedServicio, estado: estadoStr});
       setServicios(servicios.map(s => s.id === selectedServicio.id ? {...s, estado: estadoStr} : s));
     } catch (error) {
@@ -164,7 +165,7 @@ const handleUpdatePerfil = async (e) => {
       }
        };
     
-    await axios.post('https://servitek.vercel.app/api/servicios/solicitar', payload);
+    await axios.post('${API_URL}/api/servicios/solicitar', payload);
     setShowServicioModal(false);
     setServicioForm({ marca: '', modelo: '', numero_serie: '', accesorios: '', falla: '' });
     fetchClientData(userEmail); 
@@ -186,7 +187,7 @@ window.location.reload();
     if (!selectedServicio) return;
     setDiagLoading(true);
     try {
-      await axios.post(`https://servitek.vercel.app/servicios/${selectedServicio.id}/diagnostico`, diagForm);
+      await axios.post(`${API_URL}/servicios/${selectedServicio.id}/diagnostico`, diagForm);
       toast.success("Diagnóstico guardado exitosamente");
       setSelectedServicio(prev => ({
         ...prev,
@@ -207,7 +208,7 @@ window.location.reload();
   const handleCancelTicket = async (servicioId) => {
     if (!window.confirm("¿Está seguro que desea anular este ticket? Esta acción no se puede deshacer.")) return;
     try {
-      await axios.put(`https://servitek.vercel.app/api/servicios/${servicioId}/cancelar`);
+      await axios.put(`${API_URL}/api/servicios/${servicioId}/cancelar`);
       toast.success("Servicio cancelado exitosamente");
       fetchClientData(userEmail);
     } catch (error) {
@@ -218,13 +219,13 @@ window.location.reload();
 
   const fetchAdminData = async () => {
     try {
-      const resClientes = await axios.get('https://servitek.vercel.app/usuarios/clientes');
+      const resClientes = await axios.get('${API_URL}/usuarios/clientes');
       setClientes(resClientes.data);
       
-      const resTecnicos = await axios.get('https://servitek.vercel.app/usuarios/tecnicos');
+      const resTecnicos = await axios.get('${API_URL}/usuarios/tecnicos');
       setTecnicos(resTecnicos.data);
 
-      const resServicios = await axios.get('https://servitek.vercel.app/servicios');
+      const resServicios = await axios.get('${API_URL}/servicios');
       setServicios(resServicios.data);
     } catch (error) {
       console.error("Error cargando datos", error);
@@ -233,7 +234,7 @@ window.location.reload();
 
   const handleAssignTech = async (servicioId, techId) => {
     try {
-      await axios.put(`https://servitek.vercel.app/servicios/${servicioId}/asignar`, { tecnico_id: techId === '' ? null : parseInt(techId) });
+      await axios.put(`${API_URL}/servicios/${servicioId}/asignar`, { tecnico_id: techId === '' ? null : parseInt(techId) });
       fetchAdminData();
     } catch (error) {
       console.error(error);
@@ -247,12 +248,12 @@ window.location.reload();
     setModalError('');
     try {
       if (editingTechId) {
-        await axios.put(`https://servitek.vercel.app/usuarios/tecnico/${editingTechId}`, {
+        await axios.put(`${API_URL}/usuarios/tecnico/${editingTechId}`, {
           nombre_completo: techForm.nombre_completo,
           especialidad: techForm.especialidad
         });
       } else {
-        await axios.post('https://servitek.vercel.app/usuarios/tecnico', {
+        await axios.post('${API_URL}/usuarios/tecnico', {
           usuario: { email: techForm.email, password: techForm.password, rol: 'tecnico' },
           tecnico: { nombre_completo: techForm.nombre_completo, especialidad: techForm.especialidad }
         });
@@ -283,7 +284,7 @@ window.location.reload();
 
   const confirmEliminarTecnico = async () => {
     try {
-      await axios.delete(`https://servitek.vercel.app/usuarios/tecnico/${confirmModal.techId}`);
+      await axios.delete(`${API_URL}/usuarios/tecnico/${confirmModal.techId}`);
       fetchAdminData();
       setConfirmModal({ isOpen: false, techId: null });
     } catch (error) {
@@ -295,7 +296,7 @@ window.location.reload();
 const handleReset = async (e) => {
   e.preventDefault();
   try {
-    const response = await axios.post('https://servitek.vercel.app/auth/reset-clave', {
+    const response = await axios.post('${API_URL}/auth/reset-clave', {
       email: username,          // Asegúrate de que esta variable tenga el correo del usuario
       codigo: parseInt(codigo), // El código de 6 dígitos de la consola
       nueva_password: nuevaPassword // La nueva contraseña escrita
@@ -416,7 +417,7 @@ const handleReset = async (e) => {
                           onClick={async () => {
                             setSelectedServicioModal(s);
                             try {
-                              const resFotos = await axios.get(`https://servitek.vercel.app/api/servicios/${s.id}/fotos`);
+                              const resFotos = await axios.get(`${API_URL}/api/servicios/${s.id}/fotos`);
                               setListaFotos(resFotos.data);
                             } catch (error) {
                               setListaFotos([]);
@@ -514,7 +515,7 @@ const handleReset = async (e) => {
                         const rutaFoto = typeof foto === 'string' ? foto : (foto.url_foto || foto.url || foto.ruta || foto.imagen);
                         const urlCompleta = rutaFoto && rutaFoto.startsWith('http') 
                           ? rutaFoto 
-                          : `https://servitek.vercel.app/${rutaFoto ? rutaFoto.replace(/^\/+/, '') : ''}`;
+                          : `${API_URL}/${rutaFoto ? rutaFoto.replace(/^\/+/, '') : ''}`;
 
                         return (
                           <div key={index} className="overflow-hidden rounded-xl border border-emerald-200 bg-white p-1 shadow-sm">
@@ -631,7 +632,7 @@ const handleReset = async (e) => {
                     onClick={async () => {
                       if (window.confirm("¿Estás seguro de rechazar la cotización? Se aplicará el cobro de la tarifa de revisión de S/. 20.00.")) {
                         try {
-                          await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicioModal.id}/rechazar`);
+                          await axios.put(`${API_URL}/api/servicios/${selectedServicioModal.id}/rechazar`);
                           toast.success("Cotización rechazada. Se aplicó el cobro de revisión de S/. 20.00.");
                           setSelectedServicioModal(null);
                           fetchServicios();
@@ -648,7 +649,7 @@ const handleReset = async (e) => {
                   <button 
                     onClick={async () => {
                       try {
-                        await axios.put(`https://servitek.vercel.app/api/servicios/${selectedServicioModal.id}/estado`, {
+                        await axios.put(`${API_URL}/api/servicios/${selectedServicioModal.id}/estado`, {
                           estado: "En reparación"
                         });
                         toast.success("¡Presupuesto aceptado con éxito!");
