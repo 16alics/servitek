@@ -5,6 +5,10 @@ import models, schemas, security
 from database import get_db
 import random
 import string
+import os
+import resend
+# Puedes inicializarla directamente o con os.getenv
+resend.api_key = os.getenv("RESEND_API_KEY")
 from utils.email import enviar_correo_servicio
 from pydantic import BaseModel
 from security import get_password_hash
@@ -234,19 +238,40 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # 4. Enviar correo SMTP real con Gmail
+    # 4. Enviar correo profesional mediante la API HTTP de Resend (100% compatible con Vercel)
     asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
-    cuerpo = f"""Hola {nombre},
+    cuerpo_html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
+        <h2 style="color: #0f172a; margin-top: 0;">¡Bienvenido a Servitek! 🛠️</h2>
+        <p style="color: #475569; font-size: 14px;">Hola <strong>{nombre}</strong>,</p>
+        <p style="color: #475569; font-size: 14px;">Tu cuenta en Servitek ha sido creada exitosamente desde recepción. A continuación, tus credenciales de acceso temporal:</p>
+        
+        <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Usuario (Email):</strong> {email_cliente}</p>
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Contraseña temporal:</strong> <span style="font-family: monospace; font-size: 16px; color: #2563eb; font-weight: bold;">{password_temporal}</span></p>
+        </div>
 
-Tu cuenta en Servitek ha sido creada exitosamente desde recepción.
-Tus credenciales de acceso temporal son:
+        <p style="color: #475569; font-size: 14px;">Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad.</p>
+        
+        <div style="margin: 25px 0; text-align: center;">
+            <a href="https://servitek.com/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
+        </div>
+        
+        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
+    </div>
+    """
 
-- Usuario (Email): {email_cliente}
-- Contraseña temporal: {password_temporal}
-
-Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad."""
-
-    enviar_correo_servicio(email_cliente, asunto, cuerpo)
+    try:
+        resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
+        params = {
+            "from": "Servitek <onboarding@resend.dev>",
+            "to": [email_cliente],
+            "subject": asunto,
+            "html": cuerpo_html,
+        }
+        resend.Emails.send(params)
+    except Exception as e:
+        print(f"Error al enviar correo con Resend desde recepción: {e}")
 
     return {
         "id": nuevo_cliente.id,
@@ -257,7 +282,6 @@ Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad
         "temp_password": password_temporal,
         "message": "Cliente registrado y credenciales enviadas por correo exitosamente."
     }
-
 @router.get("/perfil/{email}")
 def obtener_perfil_cliente(email: str, db: Session = Depends(get_db)):
     usuario = db.query(models.Usuario).filter(models.Usuario.email == email).first()
@@ -432,26 +456,39 @@ def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # Correo de bienvenida limpio (exclusivo para la web)
+    # Correo de bienvenida HTML profesional con Resend
     asunto = "¡Bienvenido a Servitek!"
-    cuerpo = f"""Hola {nombre},
-
-Gracias por registrarte en Servitek. Nos alegra mucho tenerte con nosotros.
-Ya puedes iniciar sesión con tu correo y contraseña para gestionar tus equipos y rastrear tus reparaciones.
-
-Atentamente,
-El equipo de Servitek"""
+    cuerpo_html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
+        <h2 style="color: #0f172a; margin-top: 0;">¡Bienvenido a Servitek! 🚀</h2>
+        <p style="color: #475569; font-size: 14px;">Hola <strong>{nombre}</strong>,</p>
+        <p style="color: #475569; font-size: 14px;">Gracias por registrarte en Servitek. Nos alegra mucho tenerte con nosotros.</p>
+        <p style="color: #475569; font-size: 14px;">Ya puedes iniciar sesión con tu correo y contraseña para gestionar tus equipos y rastrear tus reparaciones en tiempo real.</p>
+        <div style="margin: 25px 0; text-align: center;">
+            <a href="https://servitek.com/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
+        </div>
+        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
+    </div>
+    """
 
     try:
-        enviar_correo_servicio(email_cliente, asunto, cuerpo)
+        # Configurar clave de Resend (Asegúrate de definir RESEND_API_KEY en tus variables de entorno)
+        resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
+        
+        params = {
+            "from": "Servitek <onboarding@resend.dev>",
+            "to": [email_cliente],
+            "subject": asunto,
+            "html": cuerpo_html,
+        }
+        resend.Emails.send(params)
     except Exception as e:
-        print(f"Error al enviar correo de bienvenida: {e}")
+        print(f"Error al enviar correo de bienvenida con Resend: {e}")
 
     return {
         "mensaje": "Usuario registrado exitosamente",
         "email": email_cliente
     }
-    
 class UsuarioGeneralCreate(BaseModel):
     nombre: str
     correo: str

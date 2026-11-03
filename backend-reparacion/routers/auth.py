@@ -9,10 +9,17 @@ from utils.email import enviar_correo_servicio
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import random
+
+import resend
+# Puedes inicializarla directamente o con os.getenv
+resend.api_key = os.getenv("RESEND_API_KEY")
+import os
 recovery_codes = {}
 from passlib.context import CryptContext
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
 
 def get_password_hash(password: str):
     return pwd_context.hash(password)
@@ -90,6 +97,16 @@ class ResetRequest(BaseModel):
     codigo: int
     nueva_password: str
 
+import os
+import resend
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+router = APIRouter()
+
+# Configura tu clave de Resend (puedes reemplazarla o usar variables de entorno)
+resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
+
 @router.post("/recuperar-clave")
 def solicitar_recuperacion(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
     usuario = db.query(models.Usuario).filter(models.Usuario.email == datos.email).first()
@@ -102,18 +119,37 @@ def solicitar_recuperacion(datos: RecuperarClaveSchema, db: Session = Depends(ge
     # Guardar en memoria asociado al email
     recovery_codes[datos.email] = str(codigo_recuperacion)
     
-    # Enviar correo simulado a la consola
+    # Estructura del correo profesional con Resend
     asunto = "Código de Restablecimiento de Contraseña - Servitek"
-    cuerpo = f"""
-    Has solicitado restablecer tu contraseña en Servitek.
-    Tu código de verificación de 6 dígitos es: {codigo_recuperacion}
-    Este código expira en 15 minutos.
+    cuerpo_html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
+        <h2 style="color: #0f172a; margin-top: 0;">Servitek - Recuperación</h2>
+        <p style="color: #475569; font-size: 14px;">Has solicitado restablecer tu contraseña en la plataforma.</p>
+        <p style="color: #475569; font-size: 14px;">Tu código de verificación de 6 dígitos es:</p>
+        <div style="background-color: #2563eb; color: white; font-size: 24px; font-weight: bold; text-align: center; padding: 12px; border-radius: 8px; letter-spacing: 4px; margin: 20px 0;">
+            {codigo_recuperacion}
+        </div>
+        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Este código expira en 15 minutos. Si no solicitaste esto, puedes ignorar este mensaje.</p>
+    </div>
     """
-    enviar_correo_servicio(usuario.email, asunto, cuerpo)
     
+    try:
+        # Envío mediante API HTTP de Resend (100% compatible con Vercel)
+        params = {
+            "from": "Servitek <onboarding@resend.dev>",
+            "to": [usuario.email],
+            "subject": asunto,
+            "html": cuerpo_html,
+        }
+        resend.Emails.send(params)
+    except Exception as e:
+        print(f"Error al enviar correo mediante Resend: {e}")
+        # Opcional: No rompemos el flujo si falla el servicio de correo, 
+        # ya que el usuario puede ver el código de respaldo en la respuesta JSON o consola.
+
     return {
         "message": "Se ha enviado un código de recuperación a su correo electrónico.",
-        "codigo": codigo_recuperacion
+        "codigo": codigo_recuperacion  # Útil para respaldo en desarrollo/producción
     }
 
 # CAMBIADO A /reset-clave para que coincida exactamente con tu frontend

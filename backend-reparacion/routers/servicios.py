@@ -5,7 +5,11 @@ from typing import List, Optional
 from datetime import datetime, date, time
 import random
 import string
+import os
 
+import resend
+# Puedes inicializarla directamente o con os.getenv
+resend.api_key = os.getenv("RESEND_API_KEY")
 import traceback
 import models
 from utils.email import enviar_correo_servicio
@@ -454,7 +458,7 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     if existe:
         raise HTTPException(status_code=400, detail="El cliente ya está registrado con este DNI")
     
-    # 1. Generar una contraseña temporal automática (ej. 6 dígitos aleatorios)
+    # 1. Generar una contraseña temporal automática (6 dígitos aleatorios)
     password_temporal = "".join(random.choices(string.digits, k=6))
     password_hash_encriptado = get_password_hash(password_temporal)
 
@@ -483,27 +487,48 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # 4. 📧 DISPARAR ENVÍO DE CORREO REAL VÍA SMTP (Gmail)
+    # 4. 📧 ENVÍO DE CORREO PROFESIONAL VÍA API HTTP DE RESEND (Compatible con Vercel)
     asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
-    cuerpo = f"""
-    Hola {payload.nombre_completo},
-    
-    Tu cuenta en Servitek ha sido creada exitosamente desde recepción.
-    Tus credenciales de acceso temporal son:
-    
-    - Usuario (Email): {email_cliente}
-    - Contraseña temporal: {password_temporal}
-    
-    Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad.
+    cuerpo_html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
+        <h2 style="color: #0f172a; margin-top: 0;">¡Bienvenido a Servitek! 🛠️</h2>
+        <p style="color: #475569; font-size: 14px;">Hola <strong>{payload.nombre_completo}</strong>,</p>
+        <p style="color: #475569; font-size: 14px;">Tu cuenta en Servitek ha sido creada exitosamente desde recepción. A continuación, tus credenciales de acceso temporal:</p>
+        
+        <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Usuario (Email):</strong> {email_cliente}</p>
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Contraseña temporal:</strong> <span style="font-family: monospace; font-size: 16px; color: #2563eb; font-weight: bold;">{password_temporal}</span></p>
+        </div>
+
+        <p style="color: #475569; font-size: 14px;">Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad.</p>
+        
+        <div style="margin: 25px 0; text-align: center;">
+            <a href="https://servitek.com/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
+        </div>
+        
+        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
+    </div>
     """
-    enviar_correo_servicio(email_cliente, asunto, cuerpo) 
+
+    try:
+        resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
+        params = {
+            "from": "Servitek <onboarding@resend.dev>",
+            "to": [email_cliente],
+            "subject": asunto,
+            "html": cuerpo_html,
+        }
+        resend.Emails.send(params)
+    except Exception as e:
+        print(f"Error al enviar correo con Resend en recepción: {e}")
+
     return {
         "id": nuevo_cliente.id,
         "nombre": nuevo_cliente.nombre_completo,
         "dni": nuevo_cliente.documento_identidad,
         "telefono": nuevo_cliente.telefono,
         "email": email_cliente,
-        "temp_password": password_temporal, # <--- Añade esto para retornarlo
+        "temp_password": password_temporal,
         "message": "Cliente registrado y credenciales enviadas por correo exitosamente."
     }
    
