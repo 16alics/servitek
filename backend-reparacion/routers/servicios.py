@@ -22,7 +22,7 @@ from security import get_current_user
 
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-recovery_codes = {}
+
 class SolicitudServicio(BaseModel):
     email: str
     equipo: schemas.EquipoBase
@@ -511,11 +511,7 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     """
     
     try:
-        import sib_api_v3_sdk
-        from sib_api_v3_sdk.rest import ApiException
-
         configuration = sib_api_v3_sdk.Configuration()
-        # Asegúrate de tener tu BREVO_API_KEY configurada en las variables de entorno de Render
         configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
 
         api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
@@ -530,19 +526,12 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
             html_content=cuerpo_html
         )
 
-        api_instance.send_transac_email(send_smtp_email)
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print("Respuesta de Brevo:", api_response)
     except Exception as e:
-        print(f"Error al enviar correo con Brevo en recepción: {e}")
-
-    return {
-        "id": nuevo_cliente.id,
-        "nombre": nuevo_cliente.nombre_completo,
-        "dni": nuevo_cliente.documento_identidad,
-        "telefono": nuevo_cliente.telefono,
-        "email": email_cliente,
-        "temp_password": password_temporal,
-        "message": "Cliente registrado y credenciales enviadas por correo exitosamente."
-    }
+        import traceback
+        print("Error detallado al enviar correo con Brevo:")
+        traceback.print_exc()
 class EstadoUpdateRequest(BaseModel):
     estado: str
     
