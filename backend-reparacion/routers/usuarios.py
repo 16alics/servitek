@@ -466,7 +466,8 @@ def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # Correo de bienvenida HTML profesional con Brevo
+    # 📧 CORREO DE BIENVENIDA PROFESIONAL VÍA API DE BREVO
+    print("--- INICIANDO PROCESO DE ENVÍO DE CORREO DE BIENVENIDA (WEB) ---")
     asunto = "¡Bienvenido a Servitek!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
@@ -483,10 +484,13 @@ def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
 
     try:
         import sib_api_v3_sdk
+        from sib_api_v3_sdk.rest import ApiException
+
         configuration = sib_api_v3_sdk.Configuration()
         configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
 
         api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+        
         sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}
         to = [{"email": email_cliente}]
         
@@ -496,10 +500,11 @@ def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
             subject=asunto,
             html_content=cuerpo_html
         )
-        api_instance.send_transac_email(send_smtp_email)
-        print("✅ CORREO DE REGISTRO ENVIADO EXITOSAMENTE CON BREVO")
+
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print("✅ CORREO DE BIENVENIDA ENVIADO CON ÉXITO:", api_response)
     except Exception as e:
-        print(f"❌ Error al enviar correo de bienvenida con Brevo: {e}")
+        print("❌ ERROR CRÍTICO AL ENVIAR CORREO CON BREVO:")
         import traceback
         traceback.print_exc()
 
