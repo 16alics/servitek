@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from pydantic import BaseModel
-
+from sqlalchemy import func
 import models, schemas, security
 from database import get_db
 from utils.email import enviar_correo_servicio
