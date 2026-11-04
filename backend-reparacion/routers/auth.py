@@ -110,10 +110,8 @@ resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
 def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
    
    
-    print(f"Buscando correo recibido: '{datos.email}'")
-    usuario = db.query(models.Usuario).filter(models.Usuario.email == datos.email).first()
-    print(f"Resultado de la consulta: {usuario}")
-    # Generar código de 6 dígitos
+    from sqlalchemy import func
+    usuario = db.query(models.Usuario).filter(func.lower(models.Usuario.email) == datos.email.lower().strip()).first() # Generar código de 6 dígitos
     codigo_recuperacion = random.randint(100000, 999999)
     
     # Guardar en memoria asociado al email
