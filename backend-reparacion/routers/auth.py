@@ -1,24 +1,23 @@
+import os
+import random
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import timedelta
-from sqlalchemy.orm import Session
+from passlib.context import CryptContext
+from pydantic import BaseModel
+
 import models, schemas, security
 from database import get_db
 from utils.email import enviar_correo_servicio
-from pydantic import BaseModel
-from datetime import datetime, timedelta
-import random
 
-import resend
-# Puedes inicializarla directamente o con os.getenv
-resend.api_key = os.getenv("RESEND_API_KEY")
-import os
 recovery_codes = {}
-from passlib.context import CryptContext
+
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 
 def get_password_hash(password: str):
