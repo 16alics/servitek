@@ -41,7 +41,7 @@ app.add_middleware(
 )
 
 # Incluimos cada router correctamente
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/auth")
 app.include_router(usuarios.router)
 app.include_router(servicios.router)  
 app.include_router(repuestos.router)
