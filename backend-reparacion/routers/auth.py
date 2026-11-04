@@ -19,7 +19,7 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 recovery_codes = {}
 
-router = APIRouter(prefix="/auth", tags=["Autenticación"])
+router = APIRouter(tags=["Autenticación"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
