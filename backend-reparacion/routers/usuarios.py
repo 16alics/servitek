@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from security import get_password_hash
 from . import servicios
 from passlib.context import CryptContext
+
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 # --- ÚNICA DECLARACIÓN DE ROUTER PARA TODO EL ARCHIVO ---
@@ -187,6 +188,7 @@ def buscar_cliente_dni(dni: str, db: Session = Depends(get_db)):
         "email": c.usuario.email,
         "equipos": equipos_data
     }
+
 
 @router.post("/cliente")
 def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
@@ -415,43 +417,44 @@ def eliminar_tecnico(tecnico_id: int, db: Session = Depends(get_db)):
     else:
         raise HTTPException(status_code=404, detail="Usuario del técnico no encontrado")
     
-@router.post("/cliente")
-def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
+@router.post("/registrar")
+def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
     datos_usuario = payload.get("usuario", {})
     datos_cliente = payload.get("cliente", {})
     
     email_cliente = datos_usuario.get("email")
+    password_plana = datos_usuario.get("password") # Contraseña que el cliente tipeó en la web
+    rol = datos_usuario.get("rol", "cliente")
+    
     dni = datos_cliente.get("documento_identidad")
     nombre = datos_cliente.get("nombre_completo")
     telefono = datos_cliente.get("telefono")
-    direccion = datos_cliente.get("direccion", "Sin dirección")
+    direccion = datos_cliente.get("direccion", "")
 
-    # Validar si ya existe el DNI
-    existe = db.query(models.Cliente).filter(models.Cliente.documento_identidad == dni).first()
-    if existe:
+    # Validaciones de duplicados...
+    existe_dni = db.query(models.Cliente).filter(models.Cliente.documento_identidad == dni).first()
+    if existe_dni:
         raise HTTPException(status_code=400, detail="El cliente ya está registrado con este DNI")
 
-    # Validar si ya existe el correo
     existe_email = db.query(models.Usuario).filter(models.Usuario.email == email_cliente).first()
     if existe_email:
-        raise HTTPException(status_code=400, detail="Email ya registrado")
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
 
-    # Generar contraseña temporal de 6 dígitos
-    password_temporal = "".join(random.choices(string.digits, k=6))
-    password_hash_encriptado = get_password_hash(password_temporal)
+    # Hashear la contraseña de la web
+    hashed_password = security.get_password_hash(password_plana)
 
-    # 1. Crear usuario
+    # Crear usuario
     nuevo_usuario = models.Usuario(
         email=email_cliente,
-        password_hash=password_hash_encriptado,
-        rol="cliente",
-        primer_ingreso=True
+        password_hash=hashed_password,
+        rol=rol,
+        primer_ingreso=False
     )
     db.add(nuevo_usuario)
     db.commit()
     db.refresh(nuevo_usuario)
 
-    # 2. Crear cliente
+    # Crear cliente
     nuevo_cliente = models.Cliente(
         usuario_id=nuevo_usuario.id,
         nombre_completo=nombre,
@@ -463,25 +466,17 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # 3. 📧 Enviar correo profesional mediante la API de Brevo
-    asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
+    # Correo de bienvenida HTML profesional con Brevo
+    asunto = "¡Bienvenido a Servitek!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
-        <h2 style="color: #0f172a; margin-top: 0;">¡Bienvenido a Servitek! 🛠️</h2>
+        <h2 style="color: #0f172a; margin-top: 0;">¡Bienvenido a Servitek! 🚀</h2>
         <p style="color: #475569; font-size: 14px;">Hola <strong>{nombre}</strong>,</p>
-        <p style="color: #475569; font-size: 14px;">Tu cuenta en Servitek ha sido creada exitosamente desde recepción. A continuación, tus credenciales de acceso temporal:</p>
-        
-        <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
-            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Usuario (Email):</strong> {email_cliente}</p>
-            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Contraseña temporal:</strong> <span style="font-family: monospace; font-size: 16px; color: #2563eb; font-weight: bold;">{password_temporal}</span></p>
-        </div>
-
-        <p style="color: #475569; font-size: 14px;">Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad.</p>
-        
+        <p style="color: #475569; font-size: 14px;">Gracias por registrarte en Servitek. Nos alegra mucho tenerte con nosotros.</p>
+        <p style="color: #475569; font-size: 14px;">Ya puedes iniciar sesión con tu correo y contraseña para gestionar tus equipos y rastrear tus reparaciones en tiempo real.</p>
         <div style="margin: 25px 0; text-align: center;">
             <a href="https://servitek.vercel.app/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
         </div>
-        
         <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
     </div>
     """
@@ -502,20 +497,15 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
             html_content=cuerpo_html
         )
         api_instance.send_transac_email(send_smtp_email)
-        print("✅ CORREO ENVIADO EXITOSAMENTE CON BREVO DESDE RECEPCIÓN")
+        print("✅ CORREO DE REGISTRO ENVIADO EXITOSAMENTE CON BREVO")
     except Exception as e:
-        print(f"❌ Error al enviar correo con Brevo desde recepción: {e}")
+        print(f"❌ Error al enviar correo de bienvenida con Brevo: {e}")
         import traceback
         traceback.print_exc()
 
     return {
-        "id": nuevo_cliente.id,
-        "nombre": nuevo_cliente.nombre_completo,
-        "dni": nuevo_cliente.documento_identidad,
-        "telefono": nuevo_cliente.telefono,
-        "email": email_cliente,
-        "temp_password": password_temporal,
-        "message": "Cliente registrado y credenciales enviadas por correo exitosamente."
+        "mensaje": "Usuario registrado exitosamente",
+        "email": email_cliente
     }
 class UsuarioGeneralCreate(BaseModel):
     nombre: str
