@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv  
 import os
-import resend  # <--- Corregido: era 'resent' por error de tipeo
 import cloudinary
 import models
 from database import engine
@@ -15,9 +14,6 @@ cloudinary.config(
     api_key="885179181197423",
     api_secret=os.getenv("CLOUDINARY_API_SECRET", "LRv7y5WSrpVS4c1mJWs2paDK6B4") 
 )
-
-# Configurar la API Key de Resend para el envío de correos
-resend.api_key = os.getenv("RESEND_API_KEY")
 
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
