@@ -7,9 +7,6 @@ import random
 import string
 import os
 
-import resend
-# Puedes inicializarla directamente o con os.getenv
-resend.api_key = os.getenv("RESEND_API_KEY")
 import traceback
 import models
 from utils.email import enviar_correo_servicio

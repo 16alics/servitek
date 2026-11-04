@@ -6,7 +6,6 @@ from database import get_db
 import random
 import string
 import os
-import resend
 # Puedes inicializarla directamente o con os.getenv
 resend.api_key = os.getenv("RESEND_API_KEY")
 from utils.email import enviar_correo_servicio
