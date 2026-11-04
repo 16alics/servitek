@@ -6,8 +6,6 @@ from database import get_db
 import random
 import string
 import os
-# Puedes inicializarla directamente o con os.getenv
-resend.api_key = os.getenv("RESEND_API_KEY")
 from utils.email import enviar_correo_servicio
 from pydantic import BaseModel
 from security import get_password_hash
