@@ -9,4 +9,4 @@ python-multipart
 passlib[bcrypt]
 python-jose[cryptography]
 python-dotenv
-resend
+sib-api-v3-sdk

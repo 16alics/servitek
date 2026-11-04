@@ -1,3 +1,5 @@
+
+
 import os
 import random
 import smtplib
@@ -13,7 +15,8 @@ from sqlalchemy import func
 import models, schemas, security
 from database import get_db
 from utils.email import enviar_correo_servicio
-
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 recovery_codes = {}
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
@@ -96,15 +99,6 @@ class ResetRequest(BaseModel):
     codigo: int
     nueva_password: str
 
-import os
-import resend
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
-router = APIRouter()
-
-# Configura tu clave de Resend (puedes reemplazarla o usar variables de entorno)
-resend.api_key = os.getenv("RESEND_API_KEY")
 
 @router.post("/recuperar-clave")
 def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
@@ -141,21 +135,29 @@ def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
     """
     
     try:
-        # 5. Envío mediante la API HTTP de Resend (Sin bloqueos en Render)
-        params = {
-            "from": "Servitek <onboarding@resend.dev>",
-            "to": [usuario.email],
-            "subject": "Código de Restablecimiento de Contraseña - Servitek",
-            "html": cuerpo_html,
-        }
+        # 5. Configuración y envío mediante la API HTTP de Brevo
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
         
-        email_response = resend.Emails.send(params)
-        print("Correo enviado exitosamente:", email_response)
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+        
+        sender = {"name": "Servitek Soporte", "email": "csalicia16@gmail.com"}
+        to = [{"email": usuario.email}]
+        
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            sender=sender,
+            to=to,
+            subject="Código de Restablecimiento de Contraseña - Servitek",
+            html_content=cuerpo_html
+        )
+        
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print("Correo enviado exitosamente con Brevo:", api_response)
         
         return {"mensaje": "Código de recuperación enviado con éxito"}
         
-    except Exception as e:
-        print(f"Error al enviar correo: {e}")
+    except ApiException as e:
+        print(f"Error al enviar correo con Brevo: {e}")
         raise HTTPException(
             status_code=500, 
             detail=f"No se pudo enviar el correo de recuperación. Detalle: {str(e)}"
