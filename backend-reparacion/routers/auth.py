@@ -108,17 +108,26 @@ resend.api_key = os.getenv("RESEND_API_KEY")
 
 @router.post("/recuperar-clave")
 def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
-   
-   
-    from sqlalchemy import func
-    usuario = db.query(models.Usuario).filter(func.lower(models.Usuario.email) == datos.email.lower().strip()).first() # Generar código de 6 dígitos
+    
+    # 1. Búsqueda insensible a mayúsculas y espacios
+    usuario = db.query(models.Usuario).filter(
+        func.lower(models.Usuario.email) == datos.email.lower().strip()
+    ).first()
+    
+    # 2. Validación obligatoria si el correo no está registrado (devuelve 404)
+    if not usuario:
+        raise HTTPException(
+            status_code=404, 
+            detail="El correo electrónico no se encuentra registrado."
+        )
+    
+    # 3. Generar código de 6 dígitos
     codigo_recuperacion = random.randint(100000, 999999)
     
-    # Guardar en memoria asociado al email
-    recovery_codes[datos.email] = str(codigo_recuperacion)
+    # Guardar en memoria asociado al email original de la BD
+    recovery_codes[usuario.email] = str(codigo_recuperacion)
     
-    # Estructura del correo profesional
-    asunto = "Código de Restablecimiento de Contraseña - Servitek"
+    # 4. Estructura del correo profesional en HTML
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
         <h2 style="color: #0f172a; margin-top: 0;">Servitek - Recuperación</h2>
@@ -132,34 +141,25 @@ def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
     """
     
     try:
-        # Credenciales desde las variables de entorno de Render
-        remitente = os.getenv("MAIL_USERNAME")
-        password = os.getenv("MAIL_PASSWORD")
+        # 5. Envío mediante la API HTTP de Resend (Sin bloqueos en Render)
+        params = {
+            "from": "Servitek <onboarding@resend.dev>",
+            "to": [usuario.email],
+            "subject": "Código de Restablecimiento de Contraseña - Servitek",
+            "html": cuerpo_html,
+        }
         
-        if not remitente or not password:
-            raise Exception("Faltan configurar las variables MAIL_USERNAME o MAIL_PASSWORD en el servidor.")
-
-        # Configurar el mensaje con MIME
-        mensaje = MIMEMultipart()
-        mensaje["From"] = f"Servitek <{remitente}>"
-        mensaje["To"] = usuario.email
-        mensaje["Subject"] = asunto
-        mensaje.attach(MIMEText(cuerpo_html, "html"))
-
-        # Conexión y envío mediante el servidor SMTP de Gmail
-        servidor = smtplib.SMTP("smtp.gmail.com", 587)
-        servidor.starttls()
-        servidor.login(remitente, password)
-        servidor.sendmail(remitente, usuario.email, mensaje.asstring())
-        servidor.quit()
+        email_response = resend.Emails.send(params)
+        print("Correo enviado exitosamente:", email_response)
+        
+        return {"mensaje": "Código de recuperación enviado con éxito"}
         
     except Exception as e:
-        print(f"Error al enviar correo mediante Gmail SMTP: {e}")
+        print(f"Error al enviar correo: {e}")
         raise HTTPException(
             status_code=500, 
             detail=f"No se pudo enviar el correo de recuperación. Detalle: {str(e)}"
         )
-
 # CAMBIADO A /reset-clave para que coincida exactamente con tu frontend
 @router.post("/reset-clave")
 def reset_clave(req: ResetRequest, db: Session = Depends(get_db)):
