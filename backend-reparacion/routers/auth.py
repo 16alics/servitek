@@ -104,7 +104,7 @@ from sqlalchemy.orm import Session
 router = APIRouter()
 
 # Configura tu clave de Resend (puedes reemplazarla o usar variables de entorno)
-resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 @router.post("/recuperar-clave")
 def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
