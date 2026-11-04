@@ -486,7 +486,7 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     db.commit()
     db.refresh(nuevo_cliente)
 
-   print(">>> [DEBUG] Entrando al bloque de envío de correo en recepción...")
+    print(">>> [DEBUG] Entrando al bloque de envío de correo en recepción...")
     asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
