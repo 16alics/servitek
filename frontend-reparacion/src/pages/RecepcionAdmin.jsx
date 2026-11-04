@@ -261,7 +261,7 @@ export default function Recepcion() {
 
     setCargando(true);
     try {
-      const response = await axios.post(`${API_URL}/api/usuarios/clientes`, {
+      const response = await axios.post(`${API_URL}/api/usuarios/cliente`, {
         usuario: {
           email: nuevoCliente.email,
           password: ""
