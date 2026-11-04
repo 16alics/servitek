@@ -141,8 +141,8 @@ def recuperar_clave(datos: RecuperarClaveSchema, db: Session = Depends(get_db)):
         
         api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
         
-       sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}  to = [{"email": usuario.email}]
-        
+        sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}  
+        to = [{"email": usuario.email}]  
         send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
             sender=sender,
             to=to,
