@@ -506,6 +506,7 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
         <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
     </div>
     """
+    
     try:
         import sib_api_v3_sdk
         from sib_api_v3_sdk.rest import ApiException
