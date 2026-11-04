@@ -484,7 +484,7 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # 4. 📧 ENVÍO DE CORREO PROFESIONAL VÍA API HTTP DE RESEND (Compatible con Vercel)
+    # 4. 📧 ENVÍO DE CORREO PROFESIONAL VÍA API DE BREVO
     asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
@@ -500,24 +500,35 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
         <p style="color: #475569; font-size: 14px;">Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad.</p>
         
         <div style="margin: 25px 0; text-align: center;">
-            <a href="https://servitek.com/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
+            <a href="https://servitek.vercel.app/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
         </div>
         
         <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
     </div>
     """
-
     try:
-        resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
-        params = {
-            "from": "Servitek <onboarding@resend.dev>",
-            "to": [email_cliente],
-            "subject": asunto,
-            "html": cuerpo_html,
-        }
-        resend.Emails.send(params)
+        import sib_api_v3_sdk
+        from sib_api_v3_sdk.rest import ApiException
+
+        configuration = sib_api_v3_sdk.Configuration()
+        # Asegúrate de tener tu BREVO_API_KEY configurada en las variables de entorno de Render
+        configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
+
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+        
+        sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}
+        to = [{"email": email_cliente}]
+        
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=to,
+            sender=sender,
+            subject=asunto,
+            html_content=cuerpo_html
+        )
+
+        api_instance.send_transac_email(send_smtp_email)
     except Exception as e:
-        print(f"Error al enviar correo con Resend en recepción: {e}")
+        print(f"Error al enviar correo con Brevo en recepción: {e}")
 
     return {
         "id": nuevo_cliente.id,
@@ -528,7 +539,6 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
         "temp_password": password_temporal,
         "message": "Cliente registrado y credenciales enviadas por correo exitosamente."
     }
-   
 class EstadoUpdateRequest(BaseModel):
     estado: str
     
