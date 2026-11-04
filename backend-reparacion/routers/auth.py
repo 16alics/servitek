@@ -156,11 +156,10 @@ def solicitar_recuperacion(datos: RecuperarClaveSchema, db: Session = Depends(ge
         
     except Exception as e:
         print(f"Error al enviar correo mediante Gmail SMTP: {e}")
-
-    return {
-        "message": "Se ha enviado un código de recuperación a su correo electrónico.",
-        "codigo": codigo_recuperacion  # Útil para respaldo en desarrollo
-    }
+        raise HTTPException(
+            status_code=500, 
+            detail=f"No se pudo enviar el correo de recuperación. Detalle: {str(e)}"
+        )
 
 # CAMBIADO A /reset-clave para que coincida exactamente con tu frontend
 @router.post("/reset-clave")
