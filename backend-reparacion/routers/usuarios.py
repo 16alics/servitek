@@ -188,7 +188,6 @@ def buscar_cliente_dni(dni: str, db: Session = Depends(get_db)):
         "equipos": equipos_data
     }
 
-
 @router.post("/cliente")
 def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     datos_usuario = payload.get("usuario", {})
@@ -210,11 +209,11 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     if existe_email:
         raise HTTPException(status_code=400, detail="Email ya registrado")
 
-    # 1. Generar contraseña temporal de 6 dígitos
+    # Generar contraseña temporal de 6 dígitos
     password_temporal = "".join(random.choices(string.digits, k=6))
     password_hash_encriptado = get_password_hash(password_temporal)
 
-    # 2. Crear usuario
+    # 1. Crear usuario
     nuevo_usuario = models.Usuario(
         email=email_cliente,
         password_hash=password_hash_encriptado,
@@ -225,7 +224,7 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_usuario)
 
-    # 3. Crear cliente
+    # 2. Crear cliente
     nuevo_cliente = models.Cliente(
         usuario_id=nuevo_usuario.id,
         nombre_completo=nombre,
@@ -237,7 +236,7 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # 4. Enviar correo profesional mediante la API HTTP de Resend (100% compatible con Vercel)
+    # 3. 📧 Enviar correo profesional mediante la API de Brevo
     asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
@@ -253,7 +252,7 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
         <p style="color: #475569; font-size: 14px;">Por favor, inicia sesión en la plataforma y cambia tu contraseña por seguridad.</p>
         
         <div style="margin: 25px 0; text-align: center;">
-            <a href="https://servitek.com/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
+            <a href="https://servitek.vercel.app/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
         </div>
         
         <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
@@ -261,16 +260,26 @@ def crear_cliente_recepcion(payload: dict, db: Session = Depends(get_db)):
     """
 
     try:
-        resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
-        params = {
-            "from": "Servitek <onboarding@resend.dev>",
-            "to": [email_cliente],
-            "subject": asunto,
-            "html": cuerpo_html,
-        }
-        resend.Emails.send(params)
+        import sib_api_v3_sdk
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
+
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+        sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}
+        to = [{"email": email_cliente}]
+        
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=to,
+            sender=sender,
+            subject=asunto,
+            html_content=cuerpo_html
+        )
+        api_instance.send_transac_email(send_smtp_email)
+        print("✅ CORREO ENVIADO EXITOSAMENTE CON BREVO DESDE RECEPCIÓN")
     except Exception as e:
-        print(f"Error al enviar correo con Resend desde recepción: {e}")
+        print(f"❌ Error al enviar correo con Brevo desde recepción: {e}")
+        import traceback
+        traceback.print_exc()
 
     return {
         "id": nuevo_cliente.id,
