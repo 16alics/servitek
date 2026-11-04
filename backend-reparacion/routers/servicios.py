@@ -487,7 +487,7 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # 4. 📧 ENVÍO DE CORREO PROFESIONAL VÍA API DE BREVO
+    print("--- INICIANDO PROCESO DE ENVÍO DE CORREO ---")
     asunto = "¡Bienvenido a Servitek - Credenciales de Acceso!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
@@ -511,6 +511,9 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
     """
     
     try:
+        import sib_api_v3_sdk
+        from sib_api_v3_sdk.rest import ApiException
+
         configuration = sib_api_v3_sdk.Configuration()
         configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
 
@@ -527,10 +530,10 @@ def crear_cliente_recepcion(payload: schemas.ClienteCreate, db: Session = Depend
         )
 
         api_response = api_instance.send_transac_email(send_smtp_email)
-        print("Respuesta de Brevo:", api_response)
+        print("✅ CORREO ENVIADO CON ÉXITO:", api_response)
     except Exception as e:
+        print("❌ ERROR CRÍTICO ENVIANDO CORREO DE BIENVENIDA:")
         import traceback
-        print("Error detallado al enviar correo con Brevo:")
         traceback.print_exc()
 class EstadoUpdateRequest(BaseModel):
     estado: str
