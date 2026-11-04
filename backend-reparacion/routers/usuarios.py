@@ -11,6 +11,9 @@ from pydantic import BaseModel
 from security import get_password_hash
 from . import servicios
 from passlib.context import CryptContext
+
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 # --- ÚNICA DECLARACIÓN DE ROUTER PARA TODO EL ARCHIVO ---
 router = APIRouter(prefix="/api/usuarios", tags=["Gestión de Usuarios"])
 
@@ -453,7 +456,8 @@ def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_cliente)
 
-    # Correo de bienvenida HTML profesional con Resend
+    # 📧 CORREO DE BIENVENIDA PROFESIONAL VÍA API DE BREVO
+    print("--- INICIANDO PROCESO DE ENVÍO DE CORREO DE BIENVENIDA (WEB) ---")
     asunto = "¡Bienvenido a Servitek!"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
@@ -462,25 +466,37 @@ def registrar_cliente_web(payload: dict, db: Session = Depends(get_db)):
         <p style="color: #475569; font-size: 14px;">Gracias por registrarte en Servitek. Nos alegra mucho tenerte con nosotros.</p>
         <p style="color: #475569; font-size: 14px;">Ya puedes iniciar sesión con tu correo y contraseña para gestionar tus equipos y rastrear tus reparaciones en tiempo real.</p>
         <div style="margin: 25px 0; text-align: center;">
-            <a href="https://servitek.com/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
+            <a href="https://servitek.vercel.app/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Iniciar Sesión</a>
         </div>
         <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
     </div>
     """
 
     try:
-        # Configurar clave de Resend (Asegúrate de definir RESEND_API_KEY en tus variables de entorno)
-        resend.api_key = os.getenv("RESEND_API_KEY", "re_tu_api_key_aqui")
+        import sib_api_v3_sdk
+        from sib_api_v3_sdk.rest import ApiException
+
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
+
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
         
-        params = {
-            "from": "Servitek <onboarding@resend.dev>",
-            "to": [email_cliente],
-            "subject": asunto,
-            "html": cuerpo_html,
-        }
-        resend.Emails.send(params)
+        sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}
+        to = [{"email": email_cliente}]
+        
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=to,
+            sender=sender,
+            subject=asunto,
+            html_content=cuerpo_html
+        )
+
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print("✅ CORREO DE BIENVENIDA ENVIADO CON ÉXITO:", api_response)
     except Exception as e:
-        print(f"Error al enviar correo de bienvenida con Resend: {e}")
+        print("❌ ERROR CRÍTICO AL ENVIAR CORREO CON BREVO:")
+        import traceback
+        traceback.print_exc()
 
     return {
         "mensaje": "Usuario registrado exitosamente",
