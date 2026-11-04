@@ -20,6 +20,9 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from security import get_current_user
 
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
+recovery_codes = {}
 class SolicitudServicio(BaseModel):
     email: str
     equipo: schemas.EquipoBase
