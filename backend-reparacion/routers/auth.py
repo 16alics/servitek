@@ -119,7 +119,7 @@ def solicitar_recuperacion(datos: RecuperarClaveSchema, db: Session = Depends(ge
     # Guardar en memoria asociado al email
     recovery_codes[datos.email] = str(codigo_recuperacion)
     
-    # Estructura del correo profesional con Resend
+    # Estructura del correo profesional
     asunto = "Código de Restablecimiento de Contraseña - Servitek"
     cuerpo_html = f"""
     <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
@@ -134,22 +134,33 @@ def solicitar_recuperacion(datos: RecuperarClaveSchema, db: Session = Depends(ge
     """
     
     try:
-        # Envío mediante API HTTP de Resend (100% compatible con Vercel)
-        params = {
-            "from": "Servitek <onboarding@resend.dev>",
-            "to": [usuario.email],
-            "subject": asunto,
-            "html": cuerpo_html,
-        }
-        resend.Emails.send(params)
+        # Credenciales desde las variables de entorno de Render
+        remitente = os.getenv("MAIL_USERNAME")
+        password = os.getenv("MAIL_PASSWORD")
+        
+        if not remitente or not password:
+            raise Exception("Faltan configurar las variables MAIL_USERNAME o MAIL_PASSWORD en el servidor.")
+
+        # Configurar el mensaje con MIME
+        mensaje = MIMEMultipart()
+        mensaje["From"] = f"Servitek <{remitente}>"
+        mensaje["To"] = usuario.email
+        mensaje["Subject"] = asunto
+        mensaje.attach(MIMEText(cuerpo_html, "html"))
+
+        # Conexión y envío mediante el servidor SMTP de Gmail
+        servidor = smtplib.SMTP("smtp.gmail.com", 587)
+        servidor.starttls()
+        servidor.login(remitente, password)
+        servidor.sendmail(remitente, usuario.email, mensaje.asstring())
+        servidor.quit()
+        
     except Exception as e:
-        print(f"Error al enviar correo mediante Resend: {e}")
-        # Opcional: No rompemos el flujo si falla el servicio de correo, 
-        # ya que el usuario puede ver el código de respaldo en la respuesta JSON o consola.
+        print(f"Error al enviar correo mediante Gmail SMTP: {e}")
 
     return {
         "message": "Se ha enviado un código de recuperación a su correo electrónico.",
-        "codigo": codigo_recuperacion  # Útil para respaldo en desarrollo/producción
+        "codigo": codigo_recuperacion  # Útil para respaldo en desarrollo
     }
 
 # CAMBIADO A /reset-clave para que coincida exactamente con tu frontend
