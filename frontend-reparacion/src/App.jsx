@@ -12,7 +12,7 @@ import UsuariosAdmin from './pages/UsuariosAdmin';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import LandingServitek from './pages/LandingServitek';
-import { TecnicosAdmin } from './pages/TecnicosAdmin';// o si está en la misma carpeta: import UsuariosAdmin from './UsuariosAdmin';
+import TecnicosAdmin from './pages/TecnicosAdmin';
 function App() {
   return (
     <Router>
@@ -41,8 +41,7 @@ function App() {
         <Route path="/admin/reportes" element={<ReportesAdmin />} />
         <Route path="/rastreo" element={<RastreoPublico />} />
         <Route path="/admin/usuarios" element={<UsuariosAdmin />} />
-        <Route path="/admin/tecnicos" element={<TecnicosAdmin />} />
-       
+       <Route path="/admin/tecnicos" element={<TecnicosAdmin />} />
       </Routes>
     </Router>
   );
