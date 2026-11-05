@@ -1377,53 +1377,51 @@ if (userRole === 'recepcionista') {
         Imprimir Reporte
       </button>
     </div>
-    <div className="overflow-x-auto print:overflow-visible">
-      <table className="w-full text-xs text-left text-gray-600 print:text-black">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-50 font-bold tracking-wider print:bg-white print:text-black print:border-b print:border-gray-400">
-          <tr>
-            <th className="px-5 py-3.5">Fecha</th>
-            <th className="px-5 py-3.5">Código</th>
-            <th className="px-5 py-3.5">Equipo</th>
-            <th className="px-5 py-3.5">Cliente</th>
-            <th className="px-5 py-3.5">Técnico Asignado</th>
-            <th className="px-5 py-3.5">Estado</th>
-          </tr>
-        </thead>
-      <tbody className="divide-y divide-gray-200 bg-white">
-        {servicios.length === 0 ? (
-          <tr><td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td></tr>
-        ) : (
-          servicios.map(s => {
-            const date = new Date(s.fecha_ingreso);
-            const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-            
-            // Forzamos la comparación a String para evitar problemas si uno es número y otro texto
-            const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id))?.nombre_completo || 'Sin Asignar';
-            
-            return (
-              <tr key={s.id} className="hover:bg-gray-50/50 transition">
-                <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
-                <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
-                <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
-                <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre}</td>
-                
-                {/* Usamos directamente la variable calculada arriba */}
-                <td className="px-5 py-3.5 font-semibold text-gray-900">
-                  {assignedTechName}
-                </td>
-                
-                <td className="px-5 py-3.5">
-                  <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
-                    {s.estado}
-                  </span>
-                </td>
-              </tr>
-            );
-          })
-        )}
-  </tbody>
-      </table>
-    </div>
+    <div className="overflow-x-auto print:overflow-visible print:w-full">
+  <table className="w-full text-xs text-left text-gray-600 print:text-black print:text-[11px]">
+    <thead className="text-xs text-gray-700 uppercase bg-gray-50 font-bold tracking-wider print:bg-white print:text-black print:border-b print:border-gray-400">
+      <tr>
+        <th className="px-5 py-3.5">Fecha</th>
+        <th className="px-5 py-3.5">Código</th>
+        <th className="px-5 py-3.5">Equipo</th>
+        <th className="px-5 py-3.5">Cliente</th>
+        <th className="px-5 py-3.5">Técnico Asignado</th>
+        <th className="px-5 py-3.5">Estado</th>
+      </tr>
+    </thead>
+    <tbody className="divide-y divide-gray-200 bg-white">
+      {servicios.length === 0 ? (
+        <tr><td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td></tr>
+      ) : (
+        servicios.map(s => {
+          const date = new Date(s.fecha_ingreso);
+          const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+          
+          const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id))?.nombre_completo || 'Sin Asignar';
+          
+          return (
+            <tr key={s.id} className="hover:bg-gray-50/50 transition">
+              <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
+              <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
+              <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
+              <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre}</td>
+              
+              <td className="px-5 py-3.5 font-semibold text-gray-900">
+                {assignedTechName}
+              </td>
+              
+              <td className="px-5 py-3.5">
+                <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
+                  {s.estado}
+                </span>
+              </td>
+            </tr>
+          );
+        })
+      )}
+    </tbody>
+  </table>
+</div>
   </div>
 </>
   )}
