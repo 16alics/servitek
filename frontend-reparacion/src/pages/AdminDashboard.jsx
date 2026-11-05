@@ -1403,18 +1403,8 @@ if (userRole === 'recepcionista') {
                   <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
                   <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
                   <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre}</td>
-                  <td className="px-5 py-3.5">
-                    <select 
-                      value={s.tecnico_id || ''}
-                      onChange={(e) => handleAssignTech(s.id, e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-900 text-xs rounded-xl focus:ring-2 focus:ring-blue-600 block w-full p-2 font-semibold shadow-xs outline-none print:hidden"
-                    >
-                      <option value="">Sin Asignar</option>
-                      {tecnicos.filter(t => t.activo || t.id === s.tecnico_id).map((t) => (
-                        <option key={t.id} value={t.id}>{t.nombre_completo} {!t.activo ? '(Inactivo)' : ''}</option>
-                      ))}
-                    </select>
-                    <span className="hidden print:inline">{assignedTechName}</span>
+                  <td className="px-5 py-3.5 font-semibold text-gray-900">
+                  {tecnicos.find(t => t.id === s.tecnico_id)?.nombre_completo || "Sin Asignar"}
                   </td>
                   <td className="px-5 py-3.5">
                     <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
