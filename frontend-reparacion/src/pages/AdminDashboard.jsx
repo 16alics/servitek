@@ -1369,59 +1369,64 @@ if (userRole === 'recepcionista') {
     </div>
   )}
 
-  {/* Reporte General de Reparaciones */}
-  <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden mt-8 print:shadow-none print:border-none print:mt-0">
-    <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center print:bg-white print:border-b-2 print:border-black print:mb-4 print:p-0 print:pb-2">
-      <h2 className="font-bold text-gray-900 text-xl print:text-black">Reporte General de Reparaciones</h2>
-      <button onClick={() => window.print()} className="text-xs bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition shadow-xs print:hidden font-bold cursor-pointer">
-        Imprimir Reporte
-      </button>
-    </div>
-    <div className="overflow-x-auto print:overflow-visible print:w-full">
-  <table className="w-full text-xs text-left text-gray-600 print:text-black print:text-[11px]">
-    <thead className="text-xs text-gray-700 uppercase bg-gray-50 font-bold tracking-wider print:bg-white print:text-black print:border-b print:border-gray-400">
-      <tr>
-        <th className="px-5 py-3.5">Fecha</th>
-        <th className="px-5 py-3.5">Código</th>
-        <th className="px-5 py-3.5">Equipo</th>
-        <th className="px-5 py-3.5">Cliente</th>
-        <th className="px-5 py-3.5">Técnico Asignado</th>
-        <th className="px-5 py-3.5">Estado</th>
-      </tr>
-    </thead>
-    <tbody className="divide-y divide-gray-200 bg-white">
-      {servicios.length === 0 ? (
-        <tr><td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td></tr>
-      ) : (
-        servicios.map(s => {
-          const date = new Date(s.fecha_ingreso);
-          const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-          const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id) || String(t.usuario_id) === String(s.tecnico_id))?.nombre || 'Sin Asignar';
-  
-          return (
-            <tr key={s.id} className="hover:bg-gray-50/50 transition">
-              <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
-              <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
-              <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
-              <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre} </td>
-              
-              <td className="px-5 py-3.5 font-semibold text-gray-900">
-                {assignedTechName}
-              </td>
-              
-              <td className="px-5 py-3.5">
-                <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
-                  {s.estado}
-                </span>
-              </td>
-            </tr>
-          );
-        })
-      )}
-    </tbody>
-  </table>
-</div>
+ {/* Reporte General de Reparaciones */}
+<div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden mt-8 print:shadow-none print:border-none print:mt-0 print:absolute print:inset-x-0 print:top-0 print:bg-white print:z-50">
+  <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center print:bg-white print:border-b-2 print:border-black print:mb-4 print:p-0 print:pb-2">
+    <h2 className="font-bold text-gray-900 text-xl print:text-black">Reporte General de Reparaciones</h2>
+    <button 
+      onClick={() => window.print()} 
+      type="button"
+      className="text-xs bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition shadow-xs print:hidden font-bold cursor-pointer"
+    >
+      Imprimir Reporte
+    </button>
   </div>
+  
+  <div className="overflow-x-auto print:overflow-visible print:w-full">
+    <table className="w-full text-xs text-left text-gray-600 print:text-black print:text-[11px] print:border-collapse">
+      <thead className="text-xs text-gray-700 uppercase bg-gray-50 font-bold tracking-wider print:bg-white print:text-black print:border-b-2 print:border-black">
+        <tr>
+          <th className="px-5 py-3.5 print:py-2 print:px-2">Fecha</th>
+          <th className="px-5 py-3.5 print:py-2 print:px-2">Código</th>
+          <th className="px-5 py-3.5 print:py-2 print:px-2">Equipo</th>
+          <th className="px-5 py-3.5 print:py-2 print:px-2">Cliente</th>
+          <th className="px-5 py-3.5 print:py-2 print:px-2">Técnico Asignado</th>
+          <th className="px-5 py-3.5 print:py-2 print:px-2">Estado</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-200 bg-white print:divide-gray-300">
+        {servicios.length === 0 ? (
+          <tr>
+            <td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td>
+          </tr>
+        ) : (
+          servicios.map(s => {
+            const date = new Date(s.fecha_ingreso);
+            const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+            const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id) || String(t.usuario_id) === String(s.tecnico_id))?.nombre || 'Sin Asignar';
+
+            return (
+              <tr key={s.id} className="hover:bg-gray-50/50 transition print:border-b print:border-gray-200">
+                <td className="px-5 py-3.5 print:py-2 print:px-2 text-gray-500 print:text-black">{formattedDate}</td>
+                <td className="px-5 py-3.5 print:py-2 print:px-2 font-bold font-mono text-gray-900 print:text-black">{s.codigo}</td>
+                <td className="px-5 py-3.5 print:py-2 print:px-2 font-medium text-gray-800 print:text-black">{s.equipo?.marca} {s.equipo?.modelo}</td>
+                <td className="px-5 py-3.5 print:py-2 print:px-2 text-gray-700 print:text-black">{s.equipo?.cliente_nombre}</td>
+                <td className="px-5 py-3.5 print:py-2 print:px-2 font-semibold text-gray-900 print:text-black">
+                  {assignedTechName}
+                </td>
+                <td className="px-5 py-3.5 print:py-2 print:px-2">
+                  <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
+                    {s.estado}
+                  </span>
+                </td>
+              </tr>
+            );
+          })
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
 </>
   )}
        
