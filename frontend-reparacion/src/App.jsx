@@ -12,6 +12,7 @@ import UsuariosAdmin from './pages/UsuariosAdmin';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import LandingServitek from './pages/LandingServitek';
+import TecnicosAdmin from './pages/TecnicosAdmin';
 // o si está en la misma carpeta: import UsuariosAdmin from './UsuariosAdmin';
 function App() {
   return (
