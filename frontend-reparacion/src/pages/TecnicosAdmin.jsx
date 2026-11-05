@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import TecnicosAdmin from './TecnicosAdmin'; // (O ajusta la ruta si está en otra carpeta, ej: '../pages/TecnicosAdmin')
+
 export default function TecnicosAdmin() {
   const navigate = useNavigate();
   const [tecnicos, setTecnicos] = useState([]);
