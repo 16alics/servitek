@@ -1097,338 +1097,343 @@ if (userRole === 'recepcionista') {
           </button>
         </div>
       )}
-         {userRole === 'admin' && (
-   <>
-  {/* Métricas / Contadores superiores */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 print:hidden">
-    <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
-      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Clientes</h3>
-      <p className="text-3xl font-black text-blue-600 mt-2">{clientes.length}</p>
-    </div>
-    <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
-      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Técnicos</h3>
-      <p className="text-3xl font-black text-blue-600 mt-2">{tecnicos.length}</p>
-    </div>
-    <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
-      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Equipos en Taller</h3>
-      <p className="text-3xl font-black text-blue-600 mt-2">
-       {servicios.filter(s => {
-      const est = String(s.estado || "").toLowerCase().trim();
-      return est.includes('reparacion') || est.includes('diagnostico') || est.includes('esperando');
-    }).length}
-      </p>
-    </div>
-    <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
-      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Reparados (Mes)</h3>
-      <p className="text-3xl font-black text-blue-600 mt-2">
-        {servicios.filter(s => {
-      const est = String(s.estado || "").toLowerCase().trim();
-      return est.includes('listo') || est.includes('entregado');
-    }).length}
-      </p>
-    </div>
-  </div>
-
-  {/* Listas de Clientes y Técnicos */}
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden mt-6">
-    
-    {/* Lista de Clientes */}
-    <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
-      <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center">
-        <h2 className="font-bold text-sm text-gray-900 uppercase tracking-wider">Clientes Registrados</h2>
-      </div>
-      <ul className="divide-y divide-gray-100 p-5 flex-1">
-        {clientes.length === 0 ? (
-          <p className="text-gray-400 text-xs py-6 text-center italic">No hay clientes aún.</p>
-        ) : (
-          <>
-            {clientes.slice(0, 3).map((c) => (
-              <li key={c.id} className="py-3.5 flex justify-between items-center">
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">{c.nombre_completo}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{c.telefono || 'Sin teléfono'}</p>
-                </div>
-              </li>
-            ))}
-            <div className="pt-4 mt-2 border-t border-gray-100 text-center">
-              <button 
-                onClick={() => navigate('/admin/clientes')}
-                className="text-blue-600 hover:text-blue-700 font-bold text-xs tracking-wide transition cursor-pointer"
-              >
-                Ver Directorio de Clientes Completo →
-              </button>
-            </div>
-          </>
-        )}
-      </ul>
-    </div>
+    {userRole === 'admin' && (
+  <>
+    {/* Contenedor envolvente con print:contents para no romper el flujo de impresión */}
+    <div className="print:contents">
       
-    {/* Lista de Técnicos */}
-    <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
-      <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center">
-        <h2 className="font-bold text-sm text-gray-900 uppercase tracking-wider">Técnicos</h2>
-        <button 
-          onClick={() => {
-            setTechForm({ nombre_completo: '', especialidad: '', email: '', password: '' });
-            setEditingTechId(null);
-            setShowTechModal(true);
-          }}
-          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl transition shadow-sm font-bold cursor-pointer"
-        >
-          + Nuevo Técnico
-        </button>
+      {/* Métricas / Contadores superiores */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 print:hidden">
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Clientes</h3>
+          <p className="text-3xl font-black text-blue-600 mt-2">{clientes.length}</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Técnicos</h3>
+          <p className="text-3xl font-black text-blue-600 mt-2">{tecnicos.length}</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Equipos en Taller</h3>
+          <p className="text-3xl font-black text-blue-600 mt-2">
+            {servicios.filter(s => {
+              const est = String(s.estado || "").toLowerCase().trim();
+              return est.includes('reparacion') || est.includes('diagnostico') || est.includes('esperando');
+            }).length}
+          </p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 text-center">
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Reparados (Mes)</h3>
+          <p className="text-3xl font-black text-blue-600 mt-2">
+            {servicios.filter(s => {
+              const est = String(s.estado || "").toLowerCase().trim();
+              return est.includes('listo') || est.includes('entregado');
+            }).length}
+          </p>
+        </div>
       </div>
-      <ul className="divide-y divide-gray-100 p-5 flex-1">
-        {tecnicos.length === 0 ? (
-          <p className="text-gray-400 text-xs py-6 text-center italic">No hay técnicos aún.</p>
-        ) : (
-          tecnicos.map((t) => (
-            <li key={`tecnico-${t.id}`} className="py-3.5 flex justify-between items-center group">
-              <div>
-                <p className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                  {t.nombre_completo || t.nombre || t.email}
-                  {!t.activo && <span className="px-2 py-0.5 text-[10px] bg-red-100 text-red-700 font-bold uppercase rounded-md">Inactivo</span>}
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">{t.especialidad || 'General'}</p>
-              </div>
-              <div className="flex gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => {
-                    setTechForm({ nombre_completo: t.nombre_completo || t.nombre || '', especialidad: t.especialidad || '', email: t.email || '', password: '' });
-                    setEditingTechId(t.id);
-                    setShowTechModal(true);
-                  }}
-                  className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition cursor-pointer" title="Editar"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                </button>
 
-                <button 
-                  onClick={() => handleToggleEstadoTecnico(t)}
-                  className={`p-2 rounded-xl transition-colors cursor-pointer ${
-                    t.activo 
-                      ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                      : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                  }`} 
-                  title={t.activo ? "Inhabilitar" : "Activar"}
-                >
-                  {t.activo ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                  )}
-                </button>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
-    </div>
-  </div>
-
-  {/* Sección de Inventario de Repuestos */}
-  <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 mt-6 print:hidden">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Inventario de Repuestos</h3>
-      <button 
-        onClick={() => setShowRepuestoModal(true)}
-        className="px-3.5 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition cursor-pointer"
-      >
-        + Nuevo Repuesto
-      </button>
-    </div>
-    
-    <div className="overflow-x-auto border border-gray-200 rounded-2xl">
-      <table className="w-full text-left text-xs text-gray-600">
-        <thead className="bg-gray-50 uppercase text-gray-700 font-bold tracking-wider">
-          <tr>
-            <th className="p-3.5">Nombre</th>
-            <th className="p-3.5">Descripción</th>
-            <th className="p-3.5">Costo (S/.)</th>
-            <th className="p-3.5">Stock</th>
-            <th className="p-3.5 text-center">Acciones</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {listaRepuestos.length === 0 ? (
-            <tr>
-              <td colSpan="5" className="text-center py-6 text-gray-400 italic">No hay repuestos registrados en el inventario.</td>
-            </tr>
-          ) : (
-            listaRepuestos.map((rep) => (
-              <tr key={`rep-${rep.id}`} className="hover:bg-gray-50/50 transition">
-                <td className="p-3.5 font-bold text-gray-900">{rep.nombre}</td>
-                <td className="p-3.5 text-gray-500">{rep.descripcion || '-'}</td>
-                <td className="p-3.5 font-semibold text-gray-700">S/. {rep.costo}</td>
-                <td className="p-3.5 font-bold text-emerald-600">{rep.stock} unids.</td>
-                <td className="p-3.5 text-center flex justify-center gap-2">
-                  <button 
-                    onClick={() => {
-                      setRepuestoParaStock(rep);
-                      setCantidadExtra(1);
-                      setShowStockModal(true);
-                    }}
-                    className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-100 transition shadow-xs cursor-pointer"
-                  >
-                    + Stock
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setEditingRepuestoId(rep.id);
-                      setrepuestoEditForm({
-                        nombre: rep.nombre,
-                        descripcion: rep.descripcion || '',
-                        costo: rep.costo
-                      });
-                      setShowEditRepuestoModal(true);
-                    }}
-                    className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition shadow-xs cursor-pointer"
-                  >
-                    ✏️ Editar
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  {/* ✏️ MODAL PARA EDITAR REPUESTO */}
-  {showEditRepuestoModal && (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-200">
-        <h3 className="text-base font-bold text-gray-900 mb-4">Editar Repuesto</h3>
+      {/* Listas de Clientes y Técnicos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden mt-6">
         
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          try {
-            await axios.put(`${API_URL}/api/repuestos/${editingRepuestoId}`, {
-              nombre: repuestoEditForm.nombre,
-              descripcion: repuestoEditForm.descripcion,
-              costo: parseFloat(repuestoEditForm.costo)
-            });
-            toast.success("¡Repuesto actualizado con éxito!");
-            setShowEditRepuestoModal(false);
-            setEditingRepuestoId(null);
-            window.location.reload();
-          } catch (error) {
-            console.error("Error al actualizar repuesto:", error);
-            toast.error("Error al actualizar el repuesto");
-          }
-        }} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Nombre del Repuesto</label>
-            <input 
-              type="text" 
-              required
-              value={repuestoEditForm.nombre}
-              onChange={(e) => setrepuestoEditForm({...repuestoEditForm, nombre: e.target.value})}
-              className="w-full border border-gray-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
-            />
+        {/* Lista de Clientes */}
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
+          <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center">
+            <h2 className="font-bold text-sm text-gray-900 uppercase tracking-wider">Clientes Registrados</h2>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Descripción</label>
-            <textarea 
-              value={repuestoEditForm.descripcion}
-              onChange={(e) => setrepuestoEditForm({...repuestoEditForm, descripcion: e.target.value})}
-              className="w-full border border-gray-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
-              rows="2"
-            ></textarea>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Costo (S/.)</label>
-            <input 
-              type="number" 
-              step="0.01"
-              required
-              value={repuestoEditForm.costo}
-              onChange={(e) => setrepuestoEditForm({...repuestoEditForm, costo: e.target.value})}
-              className="w-full border border-gray-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
-            />
-          </div>
+          <ul className="divide-y divide-gray-100 p-5 flex-1">
+            {clientes.length === 0 ? (
+              <p className="text-gray-400 text-xs py-6 text-center italic">No hay clientes aún.</p>
+            ) : (
+              <>
+                {clientes.slice(0, 3).map((c) => (
+                  <li key={c.id} className="py-3.5 flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">{c.nombre_completo}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{c.telefono || 'Sin teléfono'}</p>
+                    </div>
+                  </li>
+                ))}
+                <div className="pt-4 mt-2 border-t border-gray-100 text-center">
+                  <button 
+                    onClick={() => navigate('/admin/clientes')}
+                    className="text-blue-600 hover:text-blue-700 font-bold text-xs tracking-wide transition cursor-pointer"
+                  >
+                    Ver Directorio de Clientes Completo →
+                  </button>
+                </div>
+              </>
+            )}
+          </ul>
+        </div>
           
-          <div className="flex justify-end gap-2 pt-2">
+        {/* Lista de Técnicos */}
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
+          <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center">
+            <h2 className="font-bold text-sm text-gray-900 uppercase tracking-wider">Técnicos</h2>
             <button 
-              type="button"
-              onClick={() => setShowEditRepuestoModal(false)}
-              className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer"
+              onClick={() => {
+                setTechForm({ nombre_completo: '', especialidad: '', email: '', password: '' });
+                setEditingTechId(null);
+                setShowTechModal(true);
+              }}
+              className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl transition shadow-sm font-bold cursor-pointer"
             >
-              Cancelar
-            </button>
-            <button 
-              type="submit"
-              className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition shadow-sm cursor-pointer"
-            >
-              Guardar Cambios
+              + Nuevo Técnico
             </button>
           </div>
-        </form>
+          <ul className="divide-y divide-gray-100 p-5 flex-1">
+            {tecnicos.length === 0 ? (
+              <p className="text-gray-400 text-xs py-6 text-center italic">No hay técnicos aún.</p>
+            ) : (
+              tecnicos.map((t) => (
+                <li key={`tecnico-${t.id}`} className="py-3.5 flex justify-between items-center group">
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                      {t.nombre_completo || t.nombre || t.email}
+                      {!t.activo && <span className="px-2 py-0.5 text-[10px] bg-red-100 text-red-700 font-bold uppercase rounded-md">Inactivo</span>}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">{t.especialidad || 'General'}</p>
+                  </div>
+                  <div className="flex gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => {
+                        setTechForm({ nombre_completo: t.nombre_completo || t.nombre || '', especialidad: t.especialidad || '', email: t.email || '', password: '' });
+                        setEditingTechId(t.id);
+                        setShowTechModal(true);
+                      }}
+                      className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition cursor-pointer" title="Editar"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+
+                    <button 
+                      onClick={() => handleToggleEstadoTecnico(t)}
+                      className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                        t.activo 
+                          ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                          : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                      }`} 
+                      title={t.activo ? "Inhabilitar" : "Activar"}
+                    >
+                      {t.activo ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                      )}
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
       </div>
-    </div>
-  )}
 
- {/* Reporte General de Reparaciones */}
-<div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden mt-8 print:shadow-none print:border-none print:mt-0 print:absolute print:inset-x-0 print:top-0 print:bg-white print:z-50">
-  <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center print:bg-white print:border-b-2 print:border-black print:mb-4 print:p-0 print:pb-2">
-    <h2 className="font-bold text-gray-900 text-xl print:text-black">Reporte General de Reparaciones</h2>
-    <button 
-      onClick={() => window.print()} 
-      type="button"
-      className="text-xs bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition shadow-xs print:hidden font-bold cursor-pointer"
-    >
-      Imprimir Reporte
-    </button>
-  </div>
-  
-  <div className="overflow-x-auto print:overflow-visible print:w-full">
-    <table className="w-full text-xs text-left text-gray-600 print:text-black print:text-[11px] print:border-collapse">
-      <thead className="text-xs text-gray-700 uppercase bg-gray-50 font-bold tracking-wider print:bg-white print:text-black print:border-b-2 print:border-black">
-        <tr>
-          <th className="px-5 py-3.5 print:py-2 print:px-2">Fecha</th>
-          <th className="px-5 py-3.5 print:py-2 print:px-2">Código</th>
-          <th className="px-5 py-3.5 print:py-2 print:px-2">Equipo</th>
-          <th className="px-5 py-3.5 print:py-2 print:px-2">Cliente</th>
-          <th className="px-5 py-3.5 print:py-2 print:px-2">Técnico Asignado</th>
-          <th className="px-5 py-3.5 print:py-2 print:px-2">Estado</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-200 bg-white print:divide-gray-300">
-        {servicios.length === 0 ? (
-          <tr>
-            <td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td>
-          </tr>
-        ) : (
-          servicios.map(s => {
-            const date = new Date(s.fecha_ingreso);
-            const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-            const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id) || String(t.usuario_id) === String(s.tecnico_id))?.nombre || 'Sin Asignar';
-
-            return (
-              <tr key={s.id} className="hover:bg-gray-50/50 transition print:border-b print:border-gray-200">
-                <td className="px-5 py-3.5 print:py-2 print:px-2 text-gray-500 print:text-black">{formattedDate}</td>
-                <td className="px-5 py-3.5 print:py-2 print:px-2 font-bold font-mono text-gray-900 print:text-black">{s.codigo}</td>
-                <td className="px-5 py-3.5 print:py-2 print:px-2 font-medium text-gray-800 print:text-black">{s.equipo?.marca} {s.equipo?.modelo}</td>
-                <td className="px-5 py-3.5 print:py-2 print:px-2 text-gray-700 print:text-black">{s.equipo?.cliente_nombre}</td>
-                <td className="px-5 py-3.5 print:py-2 print:px-2 font-semibold text-gray-900 print:text-black">
-                  {assignedTechName}
-                </td>
-                <td className="px-5 py-3.5 print:py-2 print:px-2">
-                  <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
-                    {s.estado}
-                  </span>
-                </td>
+      {/* Sección de Inventario de Repuestos */}
+      <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-200 mt-6 print:hidden">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Inventario de Repuestos</h3>
+          <button 
+            onClick={() => setShowRepuestoModal(true)}
+            className="px-3.5 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition cursor-pointer"
+          >
+            + Nuevo Repuesto
+          </button>
+        </div>
+        
+        <div className="overflow-x-auto border border-gray-200 rounded-2xl">
+          <table className="w-full text-left text-xs text-gray-600">
+            <thead className="bg-gray-50 uppercase text-gray-700 font-bold tracking-wider">
+              <tr>
+                <th className="p-3.5">Nombre</th>
+                <th className="p-3.5">Descripción</th>
+                <th className="p-3.5">Costo (S/.)</th>
+                <th className="p-3.5">Stock</th>
+                <th className="p-3.5 text-center">Acciones</th>
               </tr>
-            );
-          })
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
-</>
-  )}
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {listaRepuestos.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-6 text-gray-400 italic">No hay repuestos registrados en el inventario.</td>
+                </tr>
+              ) : (
+                listaRepuestos.map((rep) => (
+                  <tr key={`rep-${rep.id}`} className="hover:bg-gray-50/50 transition">
+                    <td className="p-3.5 font-bold text-gray-900">{rep.nombre}</td>
+                    <td className="p-3.5 text-gray-500">{rep.descripcion || '-'}</td>
+                    <td className="p-3.5 font-semibold text-gray-700">S/. {rep.costo}</td>
+                    <td className="p-3.5 font-bold text-emerald-600">{rep.stock} unids.</td>
+                    <td className="p-3.5 text-center flex justify-center gap-2">
+                      <button 
+                        onClick={() => {
+                          setRepuestoParaStock(rep);
+                          setCantidadExtra(1);
+                          setShowStockModal(true);
+                        }}
+                        className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-100 transition shadow-xs cursor-pointer"
+                      >
+                        + Stock
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setEditingRepuestoId(rep.id);
+                          setrepuestoEditForm({
+                            nombre: rep.nombre,
+                            descripcion: rep.descripcion || '',
+                            costo: rep.costo
+                          });
+                          setShowEditRepuestoModal(true);
+                        }}
+                        className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition shadow-xs cursor-pointer"
+                      >
+                        ✏️ Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ✏️ MODAL PARA EDITAR REPUESTO */}
+      {showEditRepuestoModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 print:hidden">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-200">
+            <h3 className="text-base font-bold text-gray-900 mb-4">Editar Repuesto</h3>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await axios.put(`${API_URL}/api/repuestos/${editingRepuestoId}`, {
+                  nombre: repuestoEditForm.nombre,
+                  descripcion: repuestoEditForm.descripcion,
+                  costo: parseFloat(repuestoEditForm.costo)
+                });
+                toast.success("¡Repuesto actualizado con éxito!");
+                setShowEditRepuestoModal(false);
+                setEditingRepuestoId(null);
+                window.location.reload();
+              } catch (error) {
+                console.error("Error al actualizar repuesto:", error);
+                toast.error("Error al actualizar el repuesto");
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Nombre del Repuesto</label>
+                <input 
+                  type="text" 
+                  required
+                  value={repuestoEditForm.nombre}
+                  onChange={(e) => setrepuestoEditForm({...repuestoEditForm, nombre: e.target.value})}
+                  className="w-full border border-gray-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Descripción</label>
+                <textarea 
+                  value={repuestoEditForm.descripcion}
+                  onChange={(e) => setrepuestoEditForm({...repuestoEditForm, descripcion: e.target.value})}
+                  className="w-full border border-gray-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
+                  rows="2"
+                ></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Costo (S/.)</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  required
+                  value={repuestoEditForm.costo}
+                  onChange={(e) => setrepuestoEditForm({...repuestoEditForm, costo: e.target.value})}
+                  className="w-full border border-gray-300 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 bg-white text-gray-900"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowEditRepuestoModal(false)}
+                  className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200 transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition shadow-sm cursor-pointer"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reporte General de Reparaciones (Optimizado para impresión limpia) */}
+      <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden mt-8 print:shadow-none print:border-none print:mt-0 print:w-full print:bg-white">
+        <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center print:bg-white print:border-b-2 print:border-black print:mb-4 print:p-0 print:pb-2">
+          <h2 className="font-bold text-gray-900 text-xl print:text-black">Reporte General de Reparaciones</h2>
+          <button 
+            onClick={() => window.print()} 
+            type="button"
+            className="text-xs bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition shadow-xs print:hidden font-bold cursor-pointer"
+          >
+            Imprimir Reporte
+          </button>
+        </div>
+        
+        <div className="overflow-x-auto print:overflow-visible print:w-full">
+          <table className="w-full text-xs text-left text-gray-600 print:text-black print:text-[11px] print:border-collapse">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 font-bold tracking-wider print:bg-white print:text-black print:border-b-2 print:border-black">
+              <tr>
+                <th className="px-5 py-3.5 print:py-2 print:px-2">Fecha</th>
+                <th className="px-5 py-3.5 print:py-2 print:px-2">Código</th>
+                <th className="px-5 py-3.5 print:py-2 print:px-2">Equipo</th>
+                <th className="px-5 py-3.5 print:py-2 print:px-2">Cliente</th>
+                <th className="px-5 py-3.5 print:py-2 print:px-2">Técnico Asignado</th>
+                <th className="px-5 py-3.5 print:py-2 print:px-2">Estado</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white print:divide-gray-300">
+              {servicios.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td>
+                </tr>
+              ) : (
+                servicios.map(s => {
+                  const date = new Date(s.fecha_ingreso);
+                  const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                  const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id) || String(t.usuario_id) === String(s.tecnico_id))?.nombre || 'Sin Asignar';
+
+                  return (
+                    <tr key={s.id} className="hover:bg-gray-50/50 transition print:border-b print:border-gray-200">
+                      <td className="px-5 py-3.5 print:py-2 print:px-2 text-gray-500 print:text-black">{formattedDate}</td>
+                      <td className="px-5 py-3.5 print:py-2 print:px-2 font-bold font-mono text-gray-900 print:text-black">{s.codigo}</td>
+                      <td className="px-5 py-3.5 print:py-2 print:px-2 font-medium text-gray-800 print:text-black">{s.equipo?.marca} {s.equipo?.modelo}</td>
+                      <td className="px-5 py-3.5 print:py-2 print:px-2 text-gray-700 print:text-black">{s.equipo?.cliente_nombre}</td>
+                      <td className="px-5 py-3.5 print:py-2 print:px-2 font-semibold text-gray-900 print:text-black">
+                        {assignedTechName}
+                      </td>
+                      <td className="px-5 py-3.5 print:py-2 print:px-2">
+                        <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
+                          {s.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </>
+)}
        
          {userRole === 'tecnico' && (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
