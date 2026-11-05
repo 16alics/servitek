@@ -1396,8 +1396,8 @@ if (userRole === 'recepcionista') {
         servicios.map(s => {
           const date = new Date(s.fecha_ingreso);
           const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-         
-          const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id))?.nombre || 'Sin Asignar';
+          const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id) || String(t.usuario_id) === String(s.tecnico_id))?.nombre || 'Sin Asignar';
+  
           return (
             <tr key={s.id} className="hover:bg-gray-50/50 transition">
               <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
