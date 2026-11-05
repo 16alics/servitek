@@ -5,7 +5,7 @@ import os
 import cloudinary
 import models
 from database import engine
-from routers import auth, usuarios, servicios, repuestos
+from routers import tecnicos,auth, usuarios, servicios, repuestos
 
 load_dotenv()  
 
@@ -41,7 +41,7 @@ app.include_router(auth.router, prefix="/auth")
 app.include_router(usuarios.router)
 app.include_router(servicios.router)  
 app.include_router(repuestos.router)
-
+app.include_router(tecnicos.router)
 
 os.makedirs("uploads", exist_ok=True)
 
