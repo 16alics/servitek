@@ -22,13 +22,13 @@ const API_URL = import.meta.env.VITE_API_URL;
  
 
   // Cargar lista de técnicos
-  const fetchTecnicos = async () => {
+ const fetchTecnicos = async () => {
     try {
       setLoading(true);
       // Obtén el token guardado en el localStorage al iniciar sesión
       const token = localStorage.getItem('token'); 
 
-      const response = await axios.get('https://servitek.onrender.com/api/tecnicos', {
+      const response = await axios.get('https://servitek.onrender.com/tecnicos', {
         headers: {
           Authorization: `Bearer ${token}`
         }

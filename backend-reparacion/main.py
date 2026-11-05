@@ -42,6 +42,7 @@ app.include_router(usuarios.router)
 app.include_router(servicios.router)  
 app.include_router(repuestos.router)
 
+
 os.makedirs("uploads", exist_ok=True)
 
 @app.get("/")
