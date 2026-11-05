@@ -1397,14 +1397,16 @@ if (userRole === 'recepcionista') {
           const date = new Date(s.fecha_ingreso);
           const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
           
-          const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id))?.nombre_completo || 'Sin Asignar';
-          
+        console.log("Servicio:", s.codigo, "| tecnico_id del servicio:", s.tecnico_id, "Tipo:", typeof s.tecnico_id);
+console.log("Lista de técnicos cargados:", tecnicos);
+
+const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id))?.nombre_completo || 'Sin Asignar';
           return (
             <tr key={s.id} className="hover:bg-gray-50/50 transition">
               <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
               <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
               <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
-              <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre} {s.equipo.tecnico}</td>
+              <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre} </td>
               
               <td className="px-5 py-3.5 font-semibold text-gray-900">
                 {assignedTechName}
