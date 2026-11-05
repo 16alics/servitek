@@ -1404,7 +1404,7 @@ if (userRole === 'recepcionista') {
               <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
               <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
               <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
-              <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre}</td>
+              <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre} {s.equipo.tecnico}</td>
               
               <td className="px-5 py-3.5 font-semibold text-gray-900">
                 {assignedTechName}
