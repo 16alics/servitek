@@ -1223,66 +1223,77 @@ if (userRole === 'recepcionista') {
     </div>
       
     {/* Lista de Técnicos */}
-    <div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
-      <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center">
-        <h2 className="font-bold text-sm text-gray-900 uppercase tracking-wider">Técnicos</h2>
-        <button 
-          onClick={() => {
-            setTechForm({ nombre_completo: '', especialidad: '', email: '', password: '' });
-            setEditingTechId(null);
-            setShowTechModal(true);
-          }}
-          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl transition shadow-sm font-bold cursor-pointer"
-        >
-          + Nuevo Técnico
-        </button>
-      </div>
-      <ul className="divide-y divide-gray-100 p-5 flex-1">
-        {tecnicos.length === 0 ? (
-          <p className="text-gray-400 text-xs py-6 text-center italic">No hay técnicos aún.</p>
-        ) : (
-          tecnicos.map((t) => (
-            <li key={`tecnico-${t.id}`} className="py-3.5 flex justify-between items-center group">
-              <div>
-                <p className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                  {t.nombre_completo || t.nombre || t.email}
-                  {!t.activo && <span className="px-2 py-0.5 text-[10px] bg-red-100 text-red-700 font-bold uppercase rounded-md">Inactivo</span>}
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">{t.especialidad || 'General'}</p>
-              </div>
-              <div className="flex gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => {
-                    setTechForm({ nombre_completo: t.nombre_completo || t.nombre || '', especialidad: t.especialidad || '', email: t.email || '', password: '' });
-                    setEditingTechId(t.id);
-                    setShowTechModal(true);
-                  }}
-                  className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition cursor-pointer" title="Editar"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                </button>
+<div className="bg-white rounded-2xl shadow-xs border border-gray-200 overflow-hidden flex flex-col">
+  <div className="p-5 border-b border-gray-200 bg-gray-50/80 flex justify-between items-center">
+    <h2 className="font-bold text-sm text-gray-900 uppercase tracking-wider">Técnicos</h2>
+    <button 
+      onClick={() => {
+        setTechForm({ nombre_completo: '', especialidad: '', email: '', password: '' });
+        setEditingTechId(null);
+        setShowTechModal(true);
+      }}
+      className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl transition shadow-sm font-bold cursor-pointer"
+    >
+      + Nuevo Técnico
+    </button>
+  </div>
+  <ul className="divide-y divide-gray-100 p-5 flex-1">
+    {tecnicos.length === 0 ? (
+      <p className="text-gray-400 text-xs py-6 text-center italic">No hay técnicos aún.</p>
+    ) : (
+      <>
+        {tecnicos.slice(0, 3).map((t) => (
+          <li key={`tecnico-${t.id}`} className="py-3.5 flex justify-between items-center group">
+            <div>
+              <p className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                {t.nombre_completo || t.nombre || t.email}
+                {!t.activo && <span className="px-2 py-0.5 text-[10px] bg-red-100 text-red-700 font-bold uppercase rounded-md">Inactivo</span>}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">{t.especialidad || 'General'}</p>
+            </div>
+            <div className="flex gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => {
+                  setTechForm({ nombre_completo: t.nombre_completo || t.nombre || '', especialidad: t.especialidad || '', email: t.email || '', password: '' });
+                  setEditingTechId(t.id);
+                  setShowTechModal(true);
+                }}
+                className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition cursor-pointer" title="Editar"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              </button>
 
-                <button 
-                  onClick={() => handleToggleEstadoTecnico(t)}
-                  className={`p-2 rounded-xl transition-colors cursor-pointer ${
-                    t.activo 
-                      ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                      : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                  }`} 
-                  title={t.activo ? "Inhabilitar" : "Activar"}
-                >
-                  {t.activo ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                  )}
-                </button>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
-    </div>
+              <button 
+                onClick={() => handleToggleEstadoTecnico(t)}
+                className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                  t.activo 
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                }`} 
+                title={t.activo ? "Inhabilitar" : "Activar"}
+              >
+                {t.activo ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                )}
+              </button>
+            </div>
+          </li>
+        ))}
+        <div className="pt-4 mt-2 border-t border-gray-100 text-center">
+          <button 
+            onClick={() => navigate('/admin/tecnicos')} // Cambia la ruta si tu página de técnicos usa otra URL
+            className="text-blue-600 hover:text-blue-700 font-bold text-xs tracking-wide transition cursor-pointer"
+          >
+            Ver Directorio de Técnicos Completo →
+          </button>
+        </div>
+      </>
+    )}
+  </ul>
+</div>
+  
   </div>
 
   {/* Sección de Inventario de Repuestos */}
