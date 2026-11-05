@@ -1389,33 +1389,39 @@ if (userRole === 'recepcionista') {
             <th className="px-5 py-3.5">Estado</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {servicios.length === 0 ? (
-            <tr><td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td></tr>
-          ) : (
-            servicios.map(s => {
-              const date = new Date(s.fecha_ingreso);
-              const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-              const assignedTechName = tecnicos.find(t => t.id === s.tecnico_id)?.nombre_completo || 'Sin Asignar';
-              return (
-                <tr key={s.id} className="hover:bg-gray-50/50 transition">
-                  <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
-                  <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
-                  <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
-                  <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre}</td>
-                  <td className="px-5 py-3.5 font-semibold text-gray-900">
-                  {tecnicos.find(t => t.id === s.tecnico_id)?.nombre_completo || "Sin Asignar"}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
-                      {s.estado}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
+      <tbody className="divide-y divide-gray-200 bg-white">
+        {servicios.length === 0 ? (
+          <tr><td colSpan="6" className="text-center py-6 text-gray-400 italic">No hay servicios registrados.</td></tr>
+        ) : (
+          servicios.map(s => {
+            const date = new Date(s.fecha_ingreso);
+            const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+            
+            // Forzamos la comparación a String para evitar problemas si uno es número y otro texto
+            const assignedTechName = tecnicos.find(t => String(t.id) === String(s.tecnico_id))?.nombre_completo || 'Sin Asignar';
+            
+            return (
+              <tr key={s.id} className="hover:bg-gray-50/50 transition">
+                <td className="px-5 py-3.5 text-gray-500">{formattedDate}</td>
+                <td className="px-5 py-3.5 font-bold font-mono text-gray-900">{s.codigo}</td>
+                <td className="px-5 py-3.5 font-medium text-gray-800">{s.equipo.marca} {s.equipo.modelo}</td>
+                <td className="px-5 py-3.5 text-gray-700">{s.equipo.cliente_nombre}</td>
+                
+                {/* Usamos directamente la variable calculada arriba */}
+                <td className="px-5 py-3.5 font-semibold text-gray-900">
+                  {assignedTechName}
+                </td>
+                
+                <td className="px-5 py-3.5">
+                  <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-200 print:border-none print:bg-transparent print:text-black print:px-0">
+                    {s.estado}
+                  </span>
+                </td>
+              </tr>
+            );
+          })
+        )}
+  </tbody>
       </table>
     </div>
   </div>
