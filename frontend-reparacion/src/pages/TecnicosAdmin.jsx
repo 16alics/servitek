@@ -24,11 +24,20 @@ const API_URL = import.meta.env.VITE_API_URL;
   // Cargar lista de técnicos
   const fetchTecnicos = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/tecnicos`);
+      setLoading(true);
+      // Obtén el token guardado en el localStorage al iniciar sesión
+      const token = localStorage.getItem('token'); 
+
+      const response = await axios.get('https://servitek.onrender.com/api/tecnicos', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
       setTecnicos(response.data);
     } catch (error) {
       console.error("Error al cargar técnicos:", error);
-      toast.error("No se pudo cargar la lista de técnicos");
+      toast.error("Error al cargar la lista de técnicos");
     } finally {
       setLoading(false);
     }
