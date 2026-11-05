@@ -41,7 +41,7 @@ function App() {
         <Route path="/admin/reportes" element={<ReportesAdmin />} />
         <Route path="/rastreo" element={<RastreoPublico />} />
         <Route path="/admin/usuarios" element={<UsuariosAdmin />} />
-       <Route path="/admin/tecnicos" element={<TecnicosAdmin />} />
+        <Route path="/admin/tecnicos" element={<TecnicosAdmin />} />
       </Routes>
     </Router>
   );
