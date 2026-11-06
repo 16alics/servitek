@@ -17,6 +17,8 @@ import {
   CheckSquare 
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Search, Camera, X } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 export default function Recepcion() {
   const navigate = useNavigate();
@@ -24,6 +26,8 @@ export default function Recepcion() {
   const [clienteEncontrado, setClienteEncontrado] = useState(null);
   const [busquedaRealizada, setBusquedaRealizada] = useState(false);
   const [cargando, setCargando] = useState(false);
+  const [busquedaWeb, setBusquedaWeb] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
  const API_URL = import.meta.env.VITE_API_URL;
  
   const [serviciosListos, setServiciosListos] = useState([]);
@@ -195,33 +199,71 @@ export default function Recepcion() {
     }
   };
 
-  // Función para buscar los equipos pendientes por DNI en el backend
+  // Función unificada para validar web (por DNI o por Código de Servicio)
   const handleBuscarPendientesWeb = async (e) => {
     e.preventDefault();
-    if (!dniValidarWeb.trim()) return;
+    if (!busquedaWeb.trim()) return;
+
+    const valor = busquedaWeb.trim().toUpperCase();
 
     try {
       setCargando(true);
-      const response = await axios.get(`${API_URL}/api/servicios/recepcion/pendientes/${dniValidarWeb.trim()}`);
-      
-      if (response.data.length === 0) {
-        toast.success("No se encontraron solicitudes pendientes para este DNI.");
-        setEquiposPendientes([]);
-        return;
-      }
 
-      setEquiposPendientes(response.data);
-      setCurrentIndex(0);
-      setShowModalValidarWeb(true);
+      // Si el código comienza con "OT", buscamos directamente el servicio específico
+      if (valor.startsWith('OT')) {
+        const response = await axios.get(`${API_URL}/api/servicios/rastreo/${valor}`);
+        
+        if (!response.data) {
+          toast.error("No se encontró ninguna orden con ese código.");
+          return;
+        }
+
+        // Si prefieres abrir el mismo modal pero con un único equipo encontrado:
+        setEquiposPendientes([response.data]);
+        setCurrentIndex(0);
+        setShowModalValidarWeb(true);
+        toast.success(`Orden ${valor} encontrada correctamente.`);
+
+      } else {
+        // De lo contrario, mantenemos tu lógica original de búsqueda por DNI
+        const response = await axios.get(`${API_URL}/api/servicios/recepcion/pendientes/${valor}`);
+        
+        if (response.data.length === 0) {
+          toast.success("No se encontraron solicitudes pendientes para este DNI.");
+          setEquiposPendientes([]);
+          return;
+        }
+
+        setEquiposPendientes(response.data);
+        setCurrentIndex(0);
+        setShowModalValidarWeb(true);
+      }
 
     } catch (error) {
       console.error(error);
-      toast.error("Error al buscar las solicitudes pendientes.");
+      toast.error("Error al buscar las solicitudes o el equipo.");
     } finally {
       setCargando(false);
     }
   };
+// Función al escanear con éxito el código QR
+  const onScanSuccess = (decodedText) => {
+    setBusquedaWeb(decodedText);
+    setShowScanner(false);
+  };
 
+  const iniciarEscanner = () => {
+    setShowScanner(true);
+    setTimeout(() => {
+      const scanner = new Html5QrcodeScanner("reader-recepcion", {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+      }, false);
+      scanner.render(onScanSuccess, (error) => {
+        // Errores de escaneo en tiempo real (silenciosos)
+      });
+    }, 150);
+  };
   const handleCargarAlFormulario = (equipoSeleccionado) => {
     setFormDataTicket(prev => ({
       ...prev,
@@ -415,24 +457,36 @@ export default function Recepcion() {
     <div className="min-h-screen bg-gray-50 flex flex-col selection:bg-blue-600 selection:text-white">
       {/* Header Claro */}
       <Header userRole="recepcion" userEmail="recepcion@servitek.com" customTitle="Recepción y Taller">
-        <form onSubmit={handleBuscarPendientesWeb} className="flex gap-2 bg-white p-1.5 rounded-xl border border-gray-200 shadow-xs">
-          <input 
-            type="text" 
-            placeholder="DNI para validar web..." 
-            value={dniValidarWeb}
-            onChange={(e) => setDniValidarWeb(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-600 text-gray-800"
-          />
-          <button 
-            type="submit" 
-            disabled={cargando}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow-sm transition cursor-pointer"
-          >
-            <CheckSquare size={14} />
-            Validar Web
-          </button>
-        </form>
-      </Header>
+  <form onSubmit={handleBuscarPendientesWeb} className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-gray-200 shadow-xs">
+    <div className="relative flex items-center">
+      <input 
+        type="text" 
+        placeholder="DNI o Código (OT-...)" 
+        value={dniValidarWeb}
+        onChange={(e) => setDniValidarWeb(e.target.value)}
+        className="px-3 py-1.5 pr-8 text-xs bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-600 text-gray-800 font-mono uppercase tracking-wider"
+      />
+      {/* Botón de la cámara para escanear el QR */}
+      <button 
+        type="button"
+        onClick={iniciarEscanner}
+        className="absolute right-2 text-gray-400 hover:text-blue-600 transition cursor-pointer"
+        title="Escanear Código QR"
+      >
+        <Camera size={15} />
+      </button>
+    </div>
+
+    <button 
+      type="submit" 
+      disabled={cargando}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow-sm transition cursor-pointer"
+    >
+      <CheckSquare size={14} />
+      {cargando ? 'Buscando...' : 'Validar Web'}
+    </button>
+  </form>
+</Header>
 
       <main className="flex-1 p-6 md:p-10">
         <div className="max-w-6xl mx-auto space-y-6">
@@ -772,7 +826,29 @@ export default function Recepcion() {
           </div>
         </div>
       )}
-
+{/* MODAL DEL ESCÁNER QR EN RECEPCIÓN */}
+{showScanner && (
+  <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div className="bg-slate-900 p-6 rounded-3xl w-full max-w-md border border-slate-800 shadow-2xl relative">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-white font-bold text-base flex items-center gap-2">
+          <Camera className="w-5 h-5 text-blue-400" /> Escanear Código QR
+        </h3>
+        <button 
+          type="button"
+          onClick={() => setShowScanner(false)}
+          className="text-slate-400 hover:text-white bg-slate-800/50 p-2 rounded-xl transition cursor-pointer"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <p className="text-xs text-slate-400 mb-4 text-center">
+        Apunta con la cámara hacia el QR del recibo o documento del cliente.
+      </p>
+      <div id="reader-recepcion" className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950"></div>
+    </div>
+  </div>
+)}
       {/* --- MODAL NUEVO CLIENTE --- */}
       {showModalNuevoCliente && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
