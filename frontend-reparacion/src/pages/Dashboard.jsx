@@ -83,10 +83,10 @@ const [listaFotos, setListaFotos] = useState([]);
 
   const fetchTechData = async (email) => {
     try {
-      const resUsuarios = await axios.get('${API_URL}/usuarios/tecnicos');
+      const resUsuarios = await axios.get(`${API_URL}/usuarios/tecnicos`);
       const tecnicoAuth = resUsuarios.data.find(t => t.usuario?.email === email);
       
-      const resServicios = await axios.get('${API_URL}/servicios');
+      const resServicios = await axios.get(`${API_URL}/servicios`);
       if (tecnicoAuth) {
         const misServicios = resServicios.data.filter(s => s.tecnico_id === tecnicoAuth.id);
         setServicios(misServicios);
@@ -166,7 +166,7 @@ const handleUpdatePerfil = async (e) => {
       }
        };
     
-    await axios.post('${API_URL}/api/servicios/solicitar', payload);
+    await axios.post(`${API_URL}/api/servicios/solicitar`, payload);
     setShowServicioModal(false);
     setServicioForm({ marca: '', modelo: '', numero_serie: '', accesorios: '', falla: '' });
     fetchClientData(userEmail); 
@@ -220,13 +220,13 @@ window.location.reload();
 
   const fetchAdminData = async () => {
     try {
-      const resClientes = await axios.get('${API_URL}/usuarios/clientes');
+      const resClientes = await axios.get(`${API_URL}/usuarios/clientes`);
       setClientes(resClientes.data);
       
-      const resTecnicos = await axios.get('${API_URL}/usuarios/tecnicos');
+      const resTecnicos = await axios.get(`${API_URL}/usuarios/tecnicos`);
       setTecnicos(resTecnicos.data);
 
-      const resServicios = await axios.get('${API_URL}/servicios');
+      const resServicios = await axios.get(`${API_URL}/servicios`);
       setServicios(resServicios.data);
     } catch (error) {
       console.error("Error cargando datos", error);
@@ -254,7 +254,7 @@ window.location.reload();
           especialidad: techForm.especialidad
         });
       } else {
-        await axios.post('${API_URL}/usuarios/tecnico', {
+        await axios.post(`${API_URL}/usuarios/tecnico`, {
           usuario: { email: techForm.email, password: techForm.password, rol: 'tecnico' },
           tecnico: { nombre_completo: techForm.nombre_completo, especialidad: techForm.especialidad }
         });
@@ -297,7 +297,7 @@ window.location.reload();
 const handleReset = async (e) => {
   e.preventDefault();
   try {
-    const response = await axios.post('${API_URL}/auth/reset-clave', {
+    const response = await axios.post(`${API_URL}/auth/reset-clave`, {
       email: username,          // Asegúrate de que esta variable tenga el correo del usuario
       codigo: parseInt(codigo), // El código de 6 dígitos de la consola
       nueva_password: nuevaPassword // La nueva contraseña escrita
