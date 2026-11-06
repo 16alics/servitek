@@ -199,7 +199,7 @@ export default function Recepcion() {
   };
 
   // Función unificada para validar web (por DNI o por Código de Servicio)
-  const handleBuscarPendientesWeb = async (e) => {
+  const handleValidarWeb = async (e) => {
     e.preventDefault();
     if (!busquedaWeb.trim()) return;
 
@@ -244,6 +244,57 @@ export default function Recepcion() {
     } finally {
       setCargando(false);
     }
+  };
+  // Función para buscar los equipos pendientes por DNI en el backend
+
+  const handleBuscarPendientesWeb = async (e) => {
+
+    e.preventDefault();
+
+    if (!dniValidarWeb.trim()) return;
+
+
+
+    try {
+
+      setCargando(true);
+
+      const response = await axios.get(`${API_URL}/api/servicios/recepcion/pendientes/${dniValidarWeb.trim()}`);
+
+     
+
+      if (response.data.length === 0) {
+
+        toast.success("No se encontraron solicitudes pendientes para este DNI.");
+
+        setEquiposPendientes([]);
+
+        return;
+
+      }
+
+
+
+      setEquiposPendientes(response.data);
+
+      setCurrentIndex(0);
+
+      setShowModalValidarWeb(true);
+
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error("Error al buscar las solicitudes pendientes.");
+
+    } finally {
+
+      setCargando(false);
+
+    }
+
   };
 // Función al escanear con éxito el código QR
   const onScanSuccess = (decodedText) => {
