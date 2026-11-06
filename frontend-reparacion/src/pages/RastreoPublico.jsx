@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Search, Wrench, Calendar, AlertCircle, LogIn, ShieldAlert } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Search, AlertCircle, Calendar, ShieldAlert, LogIn, Camera, X } from 'lucide-react';import { Html5QrcodeScanner } from 'html5-qrcode';
 export default function RastreoPublico() {
   const [codigo, setCodigo] = useState('');
   const [resultado, setResultado] = useState(null);
