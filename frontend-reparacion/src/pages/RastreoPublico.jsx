@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Search, Wrench, Calendar, AlertCircle, LogIn, ShieldAlert } from 'lucide-react';
-
+import { Html5QrcodeScanner } from 'html5-qrcode';
 export default function RastreoPublico() {
   const [codigo, setCodigo] = useState('');
   const [resultado, setResultado] = useState(null);
@@ -11,7 +11,12 @@ export default function RastreoPublico() {
  
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
+const RastrearServicio = () => {
+  const [codigo, setCodigo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [resultado, setResultado] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!codigo.trim()) return;
