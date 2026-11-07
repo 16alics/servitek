@@ -69,6 +69,13 @@ const handleLogin = async (e) => {
 const handlePrimerIngreso = async (e) => {
   e.preventDefault();
   setError('');
+
+  // 1. Validar que la nueva contraseña y su confirmación coincidan
+  if (newPassword !== confirmNewPassword) {
+    setError('Las nuevas contraseñas no coinciden.');
+    return;
+  }
+
   setIsLoading(true);
 
   try {
@@ -87,8 +94,11 @@ const handlePrimerIngreso = async (e) => {
     // Limpiamos los campos de texto
     setPassword('');
     setNewPassword('');
+    if (typeof setConfirmNewPassword === 'function') {
+      setConfirmNewPassword('');
+    }
 
-    // 👈 Cambiamos el estado de la vista para regresar al formulario de login de clientes
+    // Cambiamos el estado de la vista para regresar al formulario de login
     setView('login'); 
 
   } catch (err) {
@@ -114,16 +124,23 @@ const handlePrimerIngreso = async (e) => {
 const handleReset = async (e) => {
   e.preventDefault();
   setError('');
+
+  // 1. Validar que la nueva contraseña y su confirmación coincidan
+  if (newPassword !== confirmNewPassword) {
+    setError('Las nuevas contraseñas no coinciden.');
+    return;
+  }
+
   setIsLoading(true);
 
   // Payload exacto que espera FastAPI según tu esquema ResetRequest
   const datosAEnviar = {
-    email: username.trim(),             // Asegúrate de que 'username' tenga el correo escrito
-    codigo: parseInt(recoverCode, 10),  // Convertimos a número entero por si Pydantic pide 'int'
-    nueva_password: newPassword         // La nueva contraseña ingresada
+    email: username.trim(),
+    codigo: parseInt(recoverCode, 10),
+    nueva_password: newPassword
   };
 
-  console.log("Enviando a /reset-clave:", datosAEnviar); // 🔍 Revisa esto en la consola (F12 -> Console)
+  console.log("Enviando a /reset-clave:", datosAEnviar);
 
   try {
     await axios.post(`${API_URL}/auth/reset-clave`, datosAEnviar);
@@ -132,6 +149,7 @@ const handleReset = async (e) => {
     setView('login');
     setPassword('');
     setNewPassword('');
+    setConfirmNewPassword(''); // Limpiamos también el campo de confirmación
     setRecoverCode('');
   } catch (err) {
     console.error("Error detallado del backend:", err.response?.data);
@@ -140,51 +158,66 @@ const handleReset = async (e) => {
     setIsLoading(false);
   }
 };
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setError('');
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-    try {
-      const payload = {
-        usuario: { email: username, password: password, rol: 'cliente' },
-        cliente: {
-          nombre_completo: nombre,
-          documento_identidad: documento,
-          telefono: telefono,
-          direccion: ''
-        }
-      };
-      
-      await axios.post(`${API_URL}/api/usuarios/registrar`, payload);
-      
-      // Auto login after registration
-      const formData = new URLSearchParams();
-      formData.append('username', username);
-      formData.append('password', password);
+  // Validación de doble contraseña
+  if (password !== confirmPassword) {
+    setError('Las contraseñas no coinciden.');
+    return;
+  }
 
-      const response = await axios.post(`${API_URL}/auth/login-cliente`, formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      });
-
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        navigate('/dashboard');
+  setIsLoading(true);
+  try {
+    const payload = {
+      usuario: { 
+        email: username, 
+        password: password, 
+        rol: 'cliente' 
+      },
+      cliente: {
+        nombre_completo: nombre,
+        documento_identidad: documento,
+        telefono: telefono,
+        direccion: ''
       }
-    } catch (err) {
-      const detail = err.response?.data?.detail;
-      let errorMsg = 'Error al registrar usuario';
-      if (typeof detail === 'string') {
-        errorMsg = detail;
-      } else if (Array.isArray(detail)) {
-        errorMsg = detail.map(d => `${d.loc[d.loc.length-1]}: ${d.msg}`).join(', ');
-      }
-      setError(errorMsg);
-    } finally {
-      setIsLoading(false);
+    };
+
+    // 1. Petición de registro en el backend
+    await axios.post(`${API_URL}/api/clientes/registro`, payload);
+
+    // 2. Auto-login después de un registro exitoso
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    const loginResponse = await axios.post(`${API_URL}/auth/login-cliente`, formData, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    if (loginResponse.data.access_token) {
+      localStorage.setItem('token', loginResponse.data.access_token);
+      toast.success('¡Cuenta creada e iniciada con éxito!');
+      navigate('/dashboard');
     }
-  };
 
+  } catch (err) {
+    const detail = err.response?.data?.detail;
+    let errorMsg = 'Error al registrar el usuario';
+
+    // Parseo inteligente de errores (maneja strings y arreglos de validación de Pydantic)
+    if (typeof detail === 'string') {
+      errorMsg = detail;
+    } else if (Array.isArray(detail)) {
+      errorMsg = detail.map(d => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(', ');
+    }
+
+    setError(errorMsg);
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
    <div 
   className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat w-full bg-black/60 bg-blend-overlay px-4 relative"
