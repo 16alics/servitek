@@ -8,6 +8,7 @@ export default function Login() {
   const [view, setView] = useState('login'); // 'login', 'recover', 'reset', 'register'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [nombre, setNombre] = useState('');
   const [documento, setDocumento] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -551,7 +552,17 @@ const handleRegister = async (e) => {
               required
             />
           </div>
-
+<div>
+  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Confirmar Contraseña</label>
+  <input 
+    type="password"
+    value={confirmPassword}
+    onChange={(e) => setConfirmPassword(e.target.value)}
+    placeholder="••••••••"
+    className="w-full bg-slate-950 border border-slate-700 text-white text-xs px-3.5 py-3 rounded-xl focus:outline-none focus:border-blue-500"
+    required
+  />
+</div>
           <button 
             type="submit" 
             disabled={isLoading}
