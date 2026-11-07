@@ -535,7 +535,7 @@ def hash_password(password: str):
 @router.post("/")
 def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depends(get_db)):
     try:
-        # Normalización estricta del rol para evitar conflictos con el ENUM de Postgres
+        # Normalización estricta del rol
         rol_raw = payload.rol.lower().strip()
         if "tecnico" in rol_raw or "técnico" in rol_raw:
             rol_limpio = "tecnico"
@@ -546,42 +546,53 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         else:
             rol_limpio = rol_raw
         
-        # Validar si el correo ya está registrado
-        correo_existente = db.query(models.Usuario).filter(models.Usuario.email == payload.correo).first()
-        if correo_existente:
-            raise HTTPException(
-                status_code=400, 
-                detail="El correo electrónico ya se encuentra registrado en el sistema."
-            )
+        # 1. Verificar si el usuario ya existe en el sistema
+        usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == payload.correo).first()
 
-        # Truncar contraseña a 72 bytes por seguridad de bcrypt
-        password_segura = payload.password[:72] if payload.password else "Temporal123"
-
-        # Crear el usuario
-        nuevo_usuario = models.Usuario(
-            email=payload.correo,
-            password_hash=get_password_hash(password_segura),
-            rol=rol_limpio, # 👈 Usamos el rol ya normalizado ("tecnico", "recepcionista", o "admin")
-            activo=True,
-            primer_ingreso=True
-        )
-        db.add(nuevo_usuario)
-        db.commit()
-        db.refresh(nuevo_usuario)
-
-        if rol_limpio in ["tecnico", "recepcionista"]:
-            nuevo_tecnico = models.Tecnico(
-                usuario_id=nuevo_usuario.id,
-                nombre_completo=payload.nombre,
-                especialidad=payload.especialidad if payload.especialidad and payload.especialidad.strip() else rol_limpio
-            )
-            db.add(nuevo_tecnico)
+        if usuario_existente:
+            # Si ya existe, actualizamos su rol y marcamos primer ingreso para su contraseña provisoria
+            password_segura = payload.password[:72] if payload.password else "Temporal123"
+            usuario_existente.password_hash = get_password_hash(password_segura)
+            usuario_existente.rol = rol_limpio
+            usuario_existente.activo = True
+            usuario_existente.primer_ingreso = True
             db.commit()
+            db.refresh(usuario_existente)
+            
+            nuevo_usuario = usuario_existente
+        else:
+            # 2. Si no existe, lo creamos normalmente
+            password_segura = payload.password[:72] if payload.password else "Temporal123"
+            nuevo_usuario = models.Usuario(
+                email=payload.correo,
+                password_hash=get_password_hash(password_segura),
+                rol=rol_limpio,
+                activo=True,
+                primer_ingreso=True
+            )
+            db.add(nuevo_usuario)
+            db.commit()
+            db.refresh(nuevo_usuario)
 
-        return {"message": "Personal registrado con éxito", "usuario": nuevo_usuario}
+        # 3. Validar y registrar en la tabla de técnicos/personal si corresponde
+        if rol_limpio in ["tecnico", "recepcionista"]:
+            # Verificamos si ya tiene un registro previo como técnico para no duplicar
+            tecnico_existente = db.query(models.Tecnico).filter(models.Tecnico.usuario_id == nuevo_usuario.id).first()
+            if not tecnico_existente:
+                nuevo_tecnico = models.Tecnico(
+                    usuario_id=nuevo_usuario.id,
+                    nombre_completo=payload.nombre,
+                    especialidad=payload.especialidad if payload.especialidad and payload.especialidad.strip() else rol_limpio
+                )
+                db.add(nuevo_tecnico)
+                db.commit()
+            else:
+                # Si ya existía en la tabla técnico, actualizamos su nombre/especialidad si es necesario
+                tecnico_existente.nombre_completo = payload.nombre
+                db.commit()
+
+        return {"message": "Personal registrado o actualizado con éxito", "usuario": nuevo_usuario}
         
-    except HTTPException as he:
-        raise he
     except Exception as e:
         db.rollback()
         print("ERROR EN BD:", str(e))
