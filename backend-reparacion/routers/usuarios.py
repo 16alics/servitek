@@ -559,8 +559,12 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
 def resetear_password_automatico(
     usuario_id: int, 
     db: Session = Depends(get_db), 
-    current_user: models.Usuario = Depends(security.get_current_admin_user)
+    current_user: models.Usuario = Depends(security.get_current_user)
 ):
+    # Validar que el usuario autenticado sea administrador
+    if getattr(current_user, 'rol', None) != 'admin':
+        raise HTTPException(status_code=403, detail="No tienes permisos de administrador")
+
     # 1. Verificar que el usuario exista
     usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
     if not usuario:
