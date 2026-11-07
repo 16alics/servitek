@@ -248,53 +248,50 @@ export default function Recepcion() {
   // Función para buscar los equipos pendientes por DNI en el backend
 
   const handleBuscarPendientesWeb = async (e) => {
-
     e.preventDefault();
-
     if (!dniValidarWeb.trim()) return;
 
-
+    const valor = dniValidarWeb.trim().toUpperCase();
 
     try {
-
       setCargando(true);
 
-      const response = await axios.get(`${API_URL}/api/servicios/recepcion/pendientes/${dniValidarWeb.trim()}`);
+      // Si el texto comienza con "OT", buscamos directamente el servicio específico
+      if (valor.startsWith('OT')) {
+        const response = await axios.get(`${API_URL}/api/servicios/rastreo/${valor}`);
+        
+        if (!response.data) {
+          toast.error("No se encontró ninguna orden con ese código.");
+          return;
+        }
 
-     
+        // Cargamos la orden en el modal de pendientes/validación web
+        setEquiposPendientes([response.data]);
+        setCurrentIndex(0);
+        setShowModalValidarWeb(true);
+        toast.success(`Orden ${valor} encontrada correctamente.`);
 
-      if (response.data.length === 0) {
+      } else {
+        // De lo contrario, realizamos la búsqueda tradicional por DNI
+        const response = await axios.get(`${API_URL}/api/servicios/recepcion/pendientes/${valor}`);
+        
+        if (response.data.length === 0) {
+          toast.success("No se encontraron solicitudes pendientes para este DNI.");
+          setEquiposPendientes([]);
+          return;
+        }
 
-        toast.success("No se encontraron solicitudes pendientes para este DNI.");
-
-        setEquiposPendientes([]);
-
-        return;
-
+        setEquiposPendientes(response.data);
+        setCurrentIndex(0);
+        setShowModalValidarWeb(true);
       }
 
-
-
-      setEquiposPendientes(response.data);
-
-      setCurrentIndex(0);
-
-      setShowModalValidarWeb(true);
-
-
-
     } catch (error) {
-
       console.error(error);
-
-      toast.error("Error al buscar las solicitudes pendientes.");
-
+      toast.error("Error al buscar las solicitudes o el equipo.");
     } finally {
-
       setCargando(false);
-
     }
-
   };
 // Función al escanear con éxito el código QR
   const onScanSuccess = (decodedText) => {
@@ -302,7 +299,7 @@ export default function Recepcion() {
     setShowScanner(false);
   };
 
-  const iniciarEscanner = () => {
+const iniciarEscanner = () => {
     setShowScanner(true);
     setTimeout(() => {
       const scanner = new Html5QrcodeScanner("reader-recepcion", {
