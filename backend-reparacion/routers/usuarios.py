@@ -559,7 +559,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
 def resetear_password_automatico(
     usuario_id: int, 
     db: Session = Depends(get_db), 
-    current_user: models.Usuario = Depends(security.get_admin_user)
+    current_user: models.Usuario = Depends(security.get_current_admin_user)
 ):
     # 1. Verificar que el usuario exista
     usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
