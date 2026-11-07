@@ -545,29 +545,22 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         
         correo_input = payload.correo.strip().lower()
 
-        # 1. 🛡️ Validar si el correo ya existe en la tabla de CLIENTES
-        cliente_existente = db.query(models.Cliente).join(models.Usuario).filter(models.Usuario.email == correo_input).first()
-        if cliente_existente:
-            raise HTTPException(
-                status_code=400,
-                detail="Este correo ya se encuentra registrado como cliente. El personal debe utilizar un correo único y diferente."
-            )
-
-        # 2. Verificar si ya existe en la tabla general de usuarios
+        # 1. Buscamos si el usuario ya existe en el sistema global
         usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == correo_input).first()
 
         if usuario_existente:
-            # Si ya existe pero es de personal (ej. actualizando datos de otro técnico)
+            # Si ya existe (ej: era cliente), actualizamos su rol para que ahora tenga privilegios de personal
             password_segura = payload.password[:72] if payload.password else "Temporal123"
             usuario_existente.password_hash = get_password_hash(password_segura)
-            usuario_existente.rol = rol_limpio
+            usuario_existente.rol = rol_limpio # Lo ascendemos a técnico, recepcionista o admin
             usuario_existente.activo = True
             usuario_existente.primer_ingreso = True
             db.commit()
             db.refresh(usuario_existente)
+            
             nuevo_usuario = usuario_existente
         else:
-            # 3. Si no existe en ningún lado, lo creamos normalmente
+            # 2. Si no existe, creamos el usuario desde cero
             password_segura = payload.password[:72] if payload.password else "Temporal123"
             nuevo_usuario = models.Usuario(
                 email=correo_input,
@@ -580,7 +573,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
             db.commit()
             db.refresh(nuevo_usuario)
 
-        # 4. Validar y registrar en la tabla de técnicos/personal si corresponde
+        # 3. Gestionar la tabla de técnicos sin tocar su posible historial de cliente
         if rol_limpio in ["tecnico", "recepcionista"]:
             tecnico_existente = db.query(models.Tecnico).filter(models.Tecnico.usuario_id == nuevo_usuario.id).first()
             if not tecnico_existente:
@@ -595,10 +588,8 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
                 tecnico_existente.nombre_completo = payload.nombre
                 db.commit()
 
-        return {"message": "Personal registrado con éxito", "usuario": nuevo_usuario}
+        return {"message": "Personal registrado o actualizado correctamente", "usuario": nuevo_usuario}
         
-    except HTTPException as he:
-        raise he
     except Exception as e:
         db.rollback()
         print("ERROR EN BD:", str(e))
