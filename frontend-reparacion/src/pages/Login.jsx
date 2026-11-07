@@ -186,8 +186,8 @@ const handleRegister = async (e) => {
     };
 
     // 1. Petición de registro en el backend
-    await axios.post(`${API_URL}/api/clientes/registro`, payload);
-
+  // 1. Petición de registro en el backend corregida
+    await axios.post(`${API_URL}/api/usuarios/registrar`, payload);
     // 2. Auto-login después de un registro exitoso
     const formData = new URLSearchParams();
     formData.append('username', username);
