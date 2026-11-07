@@ -15,7 +15,15 @@ export default function Header({ userRole, userEmail, customTitle, onBack, logou
     'cliente': 'Cliente',
     'tecnico': 'Técnico'
   };
-
+const getLogoutPath = () => {
+    if (logoutPath) return logoutPath;
+    // Si es cliente va al login de cliente, si es admin/técnico va al login de trabajador
+    if (userRole === 'cliente') {
+      return '/login'; // O la ruta exacta de tu login de cliente
+    } else {
+      return '/login-trabajador'; // Ruta para administradores, técnicos, etc.
+    }
+  };
   const title = customTitle || `Panel ${roleNames[userRole] || ''}`;
 
   return (
