@@ -294,9 +294,16 @@ export default function Recepcion() {
     }
   };
 // Función al escanear con éxito el código QR
-  const onScanSuccess = (decodedText) => {
-    setBusquedaWeb(decodedText);
+const onScanSuccess = (decodedText) => {
+    // Limpiamos el texto por si el QR contiene espacios o URLs completas (ej: extraemos solo el código o el DNI)
+    let textoLimpio = decodedText.trim();
+    
+    // Si la URL escaneada contiene el código de rastreo, podemos extraerlo si es necesario, 
+    // o asignarlo directamente al input:
+    setDniValidarWeb(textoLimpio.toUpperCase());
     setShowScanner(false);
+    
+    toast.success(`QR detectado: ${textoLimpio}`);
   };
 
 const iniciarEscanner = () => {
