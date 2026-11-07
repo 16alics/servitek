@@ -19,7 +19,9 @@ export default function Login() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [recoverCode, setRecoverCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-const irARecuperacion = () => {
+const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+  const irARecuperacion = () => {
     setResetEmail('');
     setRecoverCode('');  
     setNewPassword('');
