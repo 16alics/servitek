@@ -535,16 +535,33 @@ def hash_password(password: str):
 @router.post("/")
 def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depends(get_db)):
     try:
-        rol_limpio = payload.rol.lower()
+        # Normalización estricta del rol para evitar conflictos con el ENUM de Postgres
+        rol_raw = payload.rol.lower().strip()
+        if "tecnico" in rol_raw or "técnico" in rol_raw:
+            rol_limpio = "tecnico"
+        elif "recepcion" in rol_raw:
+            rol_limpio = "recepcionista"
+        elif "admin" in rol_raw:
+            rol_limpio = "admin"
+        else:
+            rol_limpio = rol_raw
         
-        # Obtener la contraseña de forma segura
-        password_plana = payload.password if payload.password else "Temporal123"
+        # Validar si el correo ya está registrado
+        correo_existente = db.query(models.Usuario).filter(models.Usuario.email == payload.correo).first()
+        if correo_existente:
+            raise HTTPException(
+                status_code=400, 
+                detail="El correo electrónico ya se encuentra registrado en el sistema."
+            )
 
-        # Crear el usuario usando la función directa con bcrypt nativo
+        # Truncar contraseña a 72 bytes por seguridad de bcrypt
+        password_segura = payload.password[:72] if payload.password else "Temporal123"
+
+        # Crear el usuario
         nuevo_usuario = models.Usuario(
             email=payload.correo,
-            password_hash=get_password_hash(password_plana), # 👈 Adiós passlib, hola bcrypt nativo
-            rol=rol_limpio,
+            password_hash=get_password_hash(password_segura),
+            rol=rol_limpio, # 👈 Usamos el rol ya normalizado ("tecnico", "recepcionista", o "admin")
             activo=True,
             primer_ingreso=True
         )
@@ -563,6 +580,8 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
 
         return {"message": "Personal registrado con éxito", "usuario": nuevo_usuario}
         
+    except HTTPException as he:
+        raise he
     except Exception as e:
         db.rollback()
         print("ERROR EN BD:", str(e))
