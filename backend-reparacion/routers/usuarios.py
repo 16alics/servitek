@@ -554,3 +554,67 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         db.rollback()
         print("ERROR EN BD:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/admin/reset-password-automatico/{usuario_id}")
+def resetear_password_automatico(
+    usuario_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.Usuario = Depends(security.get_admin_user)
+):
+    # 1. Verificar que el usuario exista
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # 2. Generar una contraseña temporal aleatoria y segura de 8 caracteres
+    caracteres = string.ascii_letters + string.digits
+    password_temporal = ''.join(random.choice(caracteres) for _ in range(8))
+
+    # 3. Hashear la clave temporal y activar la bandera de primer ingreso obligatoria
+    usuario.password_hash = security.get_password_hash(password_temporal)
+    usuario.primer_ingreso = True 
+    db.commit()
+
+    # 4. Enviar el correo de credenciales temporales vía Brevo
+    email_destino = usuario.email
+    asunto = "Restablecimiento de Credenciales - Servitek"
+    cuerpo_html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
+        <h2 style="color: #0f172a; margin-top: 0;">Restablecimiento de Credenciales 🔑</h2>
+        <p style="color: #475569; font-size: 14px;">Hola,</p>
+        <p style="color: #475569; font-size: 14px;">Un administrador ha generado una nueva contraseña temporal para tu cuenta en Servitek.</p>
+        <div style="background-color: #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 18px; font-weight: bold; color: #1e293b; letter-spacing: 2px;">{password_temporal}</span>
+        </div>
+        <p style="color: #475569; font-size: 14px;">Por medidas de seguridad institucionales, al iniciar sesión se te pedirá cambiar esta contraseña obligatoriamente por una nueva (con doble validación).</p>
+        <div style="margin: 25px 0; text-align: center;">
+            <a href="https://servitek.vercel.app/login" style="background-color: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Ir a Servitek</a>
+        </div>
+        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
+    </div>
+    """
+
+    try:
+        import os
+        import sib_api_v3_sdk
+        
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+        
+        sender = {"name": "Servitek Seguridad", "email": "aliciacarranzasalazar16@gmail.com"}
+        to = [{"email": email_destino}]
+        
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=to,
+            sender=sender,
+            subject=asunto,
+            html_content=cuerpo_html
+        )
+        api_instance.send_transac_email(send_smtp_email)
+        print("✅ Clave temporal enviada con éxito a:", email_destino)
+    except Exception as e:
+        print("❌ Error al enviar correo automático de reseteo:", e)
+        raise HTTPException(status_code=500, detail="Error al enviar el correo con la clave temporal")
+
+    return {"mensaje": f"Clave temporal generada y enviada exitosamente a {email_destino}"}

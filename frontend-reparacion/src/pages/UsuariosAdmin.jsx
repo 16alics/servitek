@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header'; // O ajusta la ruta de tu Header
+import axios from 'axios';
+
 import { toast } from 'react-toastify';
+
+
 export default function UsuariosAdmin() {
   const [usuarios, setUsuarios] = useState([]);
   const [filtroRol, setFiltroRol] = useState('todos');
@@ -18,11 +22,28 @@ export default function UsuariosAdmin() {
   const [modalPasswordOpen, setModalPasswordOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [nuevaPassword, setNuevaPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL;
  
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+const handleResetAutomatico = async (idUsuario) => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    // Llamada al endpoint backend que genera clave temporal + envía correo vía Brevo + marca primer_ingreso = True
+    const response = await axios.post(
+      `${API_URL}/api/usuarios/admin/reset-password-automatico/${idUsuario}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
+    toast.success(response.data.mensaje || "¡Clave temporal enviada al correo del usuario!");
+    setModalPasswordOpen(false);
+  } catch (err) {
+    toast.error(err.response?.data?.detail || "Error al enviar la clave temporal");
+  }
+};
   // 1. Cargar usuarios del sistema
   const fetchUsuarios = async () => {
     try {
@@ -359,42 +380,40 @@ const handleChange = (e) => {
     </div>
 
     {/* Modal para Restablecer Contraseña */}
-    {modalPasswordOpen && (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-gray-200 space-y-4">
-          <h3 className="text-base font-bold text-gray-900 border-b border-gray-200 pb-3">Restablecer Contraseña</h3>
-          <p className="text-xs text-gray-600 leading-relaxed">
-            Establece una nueva contraseña para: <span className="font-bold text-gray-900">{usuarioSeleccionado?.email}</span>
-          </p>
-          <form onSubmit={handleResetPassword} className="space-y-4">
-            <input 
-              type="password" 
-              placeholder="Nueva contraseña"
-              value={nuevaPassword}
-              onChange={(e) => setNuevaPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white text-gray-900"
-              required
-            />
-            <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
-              <button 
-                type="button" 
-                onClick={() => { setModalPasswordOpen(false); setNuevaPassword(''); }}
-                className="px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit"
-                className="px-4 py-2.5 text-xs font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-xs cursor-pointer"
-              >
-                Guardar Clave
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    )}
+   {modalPasswordOpen && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl border border-gray-200 space-y-4">
+      <h3 className="text-base font-bold text-gray-900 border-b border-gray-200 pb-3">
+        Restablecer Credenciales
+      </h3>
+      
+      <p className="text-xs text-gray-600 leading-relaxed">
+        ¿Estás seguro de restablecer la clave para el usuario <span className="font-bold text-gray-900">{usuarioSeleccionado?.email}</span>?
+      </p>
 
+      <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs leading-relaxed">
+        🔑 Se generará una <b>clave temporal automática</b> y se enviará a su correo. El usuario deberá cambiarla obligatoriamente al iniciar sesión.
+      </div>
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
+        <button 
+          type="button" 
+          onClick={() => setModalPasswordOpen(false)}
+          className="px-4 py-2.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button 
+          type="button"
+          onClick={() => handleResetAutomatico(usuarioSeleccionado?.id)}
+          className="px-4 py-2.5 text-xs font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-xs cursor-pointer flex items-center gap-1.5"
+        >
+          📩 Generar y Enviar al Correo
+        </button>
+      </div>
+    </div>
+  </div>
+)}
   </main>
 </div>
   );
