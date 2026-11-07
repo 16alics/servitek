@@ -6,6 +6,18 @@ from database import get_db
 import random
 import string
 import os
+import bcrypt
+
+def get_password_hash(password: str) -> str:
+    # 1. Codificar a bytes y truncar estrictamente a 72 bytes por límite de bcrypt
+    password_bytes = password.encode('utf-8')[:72]
+    # 2. Generar el salt y hashear directamente
+    hashed = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+    return hashed.decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    password_bytes = plain_password.encode('utf-8')[:72]
+    return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
 from utils.email import enviar_correo_servicio
 from pydantic import BaseModel
 from security import get_password_hash
@@ -525,13 +537,13 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
     try:
         rol_limpio = payload.rol.lower()
         
-        # 🔒 Blindaje: Truncar la contraseña a máximo 72 bytes por restricción de bcrypt
-        password_segura = payload.password[:72] if payload.password else "Temporal123"
+        # Obtener la contraseña de forma segura
+        password_plana = payload.password if payload.password else "Temporal123"
 
-        # 1. Crear el usuario en la tabla general de usuarios con su rol correspondiente
+        # Crear el usuario usando la función directa con bcrypt nativo
         nuevo_usuario = models.Usuario(
             email=payload.correo,
-            password_hash=pwd_context.hash(password_segura), # 👈 Usamos la contraseña truncada aquí
+            password_hash=get_password_hash(password_plana), # 👈 Adiós passlib, hola bcrypt nativo
             rol=rol_limpio,
             activo=True,
             primer_ingreso=True
@@ -540,7 +552,6 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         db.commit()
         db.refresh(nuevo_usuario)
 
-        # 2. Si el rol requiere un registro en la tabla de técnicos/personal
         if rol_limpio in ["tecnico", "recepcionista"]:
             nuevo_tecnico = models.Tecnico(
                 usuario_id=nuevo_usuario.id,
