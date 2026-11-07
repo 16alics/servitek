@@ -358,6 +358,17 @@ const handleRegister = async (e) => {
               minLength={6}
             />
           </div>
+          <div className="relative">
+            <input 
+              type="password" 
+              placeholder="Confirmar nueva contraseña" 
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              className="w-full bg-slate-950/50 border border-white/20 rounded-xl px-4 py-3.5 text-white placeholder-white/50 text-sm focus:outline-none focus:border-orange-400 transition-all shadow-inner"
+              required
+              minLength={6}
+            />
+          </div>
 
           <button 
             type="submit" 
@@ -452,6 +463,17 @@ const handleRegister = async (e) => {
               placeholder="Nueva contraseña" 
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="off"
+              className="w-full bg-slate-950/50 border border-white/20 rounded-xl px-4 py-3.5 text-white placeholder-white/50 text-sm focus:outline-none focus:border-blue-400 transition-all shadow-inner"
+              required
+            />
+          </div>
+          <div className="relative">
+            <input 
+              type="password" 
+              placeholder="Confirmar nueva contraseña" 
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
               autoComplete="off"
               className="w-full bg-slate-950/50 border border-white/20 rounded-xl px-4 py-3.5 text-white placeholder-white/50 text-sm focus:outline-none focus:border-blue-400 transition-all shadow-inner"
               required

@@ -25,7 +25,7 @@ export default function LoginTrabajador() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [view, setView] = useState('login'); // Control de vista: 'login' o 'primer_ingreso'
+  const [view, setView] = useState('login-trabajador'); // Control de vista: 'login' o 'primer_ingreso'
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ export default function LoginTrabajador() {
 
       toast.success('¡Contraseña actualizada con éxito! Por favor, inicia sesión con tu nueva clave.');
       localStorage.removeItem('tempEmail');
-      setView('login');
+      setView('login-trabajador');
       setPassword('');
       setNewPassword('');
     } catch (err) {
@@ -148,7 +148,7 @@ export default function LoginTrabajador() {
         </div>
 
         <div className="w-full">
-          {view === 'login' ? (
+          {view === 'login-trabajador' ? (
             /* --- VISTA 1: FORMULARIO DE LOGIN NORMAL --- */
             <>
               <div className="text-center mb-8">
@@ -253,6 +253,17 @@ export default function LoginTrabajador() {
                       className="w-full bg-slate-950/50 border border-white/15 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all shadow-inner"
                       required
                     />
+                    <div className="relative">
+            <input 
+              type="password" 
+              placeholder="Confirmar nueva contraseña" 
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              className="w-full bg-slate-950/50 border border-white/20 rounded-xl px-4 py-3.5 text-white placeholder-white/50 text-sm focus:outline-none focus:border-orange-400 transition-all shadow-inner"
+              required
+              minLength={6}
+            />
+          </div>
                     <div className="absolute left-3.5 top-3.5 text-slate-400">
                       <Lock className="w-5 h-5" />
                     </div>
