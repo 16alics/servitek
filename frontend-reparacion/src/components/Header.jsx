@@ -2,28 +2,31 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, ArrowLeft, Wrench } from 'lucide-react';
 
-export default function Header({ userRole, userEmail, customTitle, onBack, logoutPath = '/login', children }) {
+export default function Header({ userRole, userEmail, customTitle, onBack, logoutPath, children }) {
   const navigate = useNavigate();
+
+  const getLogoutPath = () => {
+    if (logoutPath) return logoutPath;
+    // Si es cliente va al login de cliente, si es admin/técnico va al login de trabajador
+    if (userRole === 'cliente') {
+      return '/login'; 
+    } else {
+      return '/login-trabajador'; 
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate(logoutPath);
+    navigate(getLogoutPath()); // 👈 Llamando correctamente a la función
   };
 
   const roleNames = {
     'admin': 'Administrador',
     'cliente': 'Cliente',
-    'tecnico': 'Técnico'
+    'tecnico': 'Técnico',
+    'recepcion': 'Recepción'
   };
-const getLogoutPath = () => {
-    if (logoutPath) return logoutPath;
-    // Si es cliente va al login de cliente, si es admin/técnico va al login de trabajador
-    if (userRole === 'cliente') {
-      return '/login'; // O la ruta exacta de tu login de cliente
-    } else {
-      return '/login-trabajador'; // Ruta para administradores, técnicos, etc.
-    }
-  };
+
   const title = customTitle || `Panel ${roleNames[userRole] || ''}`;
 
   return (
@@ -49,7 +52,6 @@ const getLogoutPath = () => {
           </span>
         </div>
 
-        {/* Si deseas conservar el título dinámico del panel al lado o debajo, puedes dejarlo o ajustarlo aquí */}
         <span className="text-xs font-semibold px-3 py-1 bg-slate-800 text-slate-300 rounded-full border border-slate-700 ml-2 hidden sm:inline-block">
           {title}
         </span>
@@ -63,7 +65,6 @@ const getLogoutPath = () => {
         )}
         
         <div className="flex items-center gap-3">
-          {/* Aquí se coloca automáticamente la campanita */}
           {children}
 
           <button 
