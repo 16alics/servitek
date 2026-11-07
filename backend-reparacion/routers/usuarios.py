@@ -525,10 +525,13 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
     try:
         rol_limpio = payload.rol.lower()
         
-        # 1. Crear el usuario en la tabla general de usuarios con su rol correspondiente ('tecnico', 'recepcionista', 'admin')
+        # 🔒 Blindaje: Truncar la contraseña a máximo 72 bytes por restricción de bcrypt
+        password_segura = payload.password[:72] if payload.password else "Temporal123"
+
+        # 1. Crear el usuario en la tabla general de usuarios con su rol correspondiente
         nuevo_usuario = models.Usuario(
             email=payload.correo,
-            password_hash=pwd_context.hash(payload.password),
+            password_hash=pwd_context.hash(password_segura), # 👈 Usamos la contraseña truncada aquí
             rol=rol_limpio,
             activo=True,
             primer_ingreso=True
@@ -537,8 +540,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         db.commit()
         db.refresh(nuevo_usuario)
 
-        # 2. Si el rol requiere un registro en la tabla de técnicos, lo guardamos ahí
-        # (Si es técnico o recepcionista y quieres que usen la misma tabla de personal/técnicos)
+        # 2. Si el rol requiere un registro en la tabla de técnicos/personal
         if rol_limpio in ["tecnico", "recepcionista"]:
             nuevo_tecnico = models.Tecnico(
                 usuario_id=nuevo_usuario.id,
@@ -554,7 +556,6 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         db.rollback()
         print("ERROR EN BD:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
-    
 @router.post("/admin/reset-password-automatico/{usuario_id}")
 def resetear_password_automatico(
     usuario_id: int, 
