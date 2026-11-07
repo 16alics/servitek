@@ -49,39 +49,36 @@ class PasswordSchema(BaseModel):
 @router.get("/")
 def listar_usuarios(db: Session = Depends(get_db)):
     try:
-        # Hacemos outerjoin con técnicos y clientes
-        resultados = db.query(
-            models.Usuario, 
-            models.Tecnico.nombre_completo.label("nombre_tecnico"),
-            models.Cliente.nombre_completo.label("nombre_cliente")
-        ).outerjoin(
-            models.Tecnico, models.Usuario.id == models.Tecnico.usuario_id
-        ).outerjoin(
-            models.Cliente, models.Usuario.id == models.Cliente.usuario_id
-        ).all()
+        # Obtenemos todos los usuarios base
+        usuarios = db.query(models.Usuario).all()
         
         lista_final = []
-        for usuario, nombre_tecnico, nombre_cliente in resultados:
-            # Obtenemos el valor real del rol de forma segura sin importar cómo lo devuelva SQLAlchemy
+        for usuario in usuarios:
             rol_raw = usuario.rol
             rol_str = rol_raw.value.lower() if hasattr(rol_raw, "value") else str(rol_raw).lower()
             if "." in rol_str:
                 rol_str = rol_str.split(".")[-1]
 
             nombre_final = "Sin nombre"
-            
-            # Filtramos según el rol real extraído
-            if rol_str in ["tecnico", "recepcionista", "administrador", "admin"]:
-                if nombre_tecnico and nombre_tecnico.strip():
-                    nombre_final = nombre_tecnico.strip()
+
+            # Buscar el nombre estrictamente según el rol que posee el usuario
+            if rol_str in ["tecnico", "recepcionista"]:
+                perfil_tecnico = db.query(models.Tecnico).filter(models.Tecnico.usuario_id == usuario.id).first()
+                if perfil_tecnico and perfil_tecnico.nombre_completo:
+                    nombre_final = perfil_tecnico.nombre_completo.strip()
                 else:
-                    nombre_final = "Administrador" if "admin" in rol_str else "Sin nombre"
+                    nombre_final = "Personal sin nombre"
                     
             elif rol_str == "cliente":
-                if nombre_cliente and nombre_cliente.strip():
-                    nombre_final = nombre_cliente.strip()
+                perfil_cliente = db.query(models.Cliente).filter(models.Cliente.usuario_id == usuario.id).first()
+                if perfil_cliente and perfil_cliente.nombre_completo:
+                    nombre_final = perfil_cliente.nombre_completo.strip()
                 else:
                     nombre_final = "Cliente"
+                    
+            elif rol_str in ["admin", "administrador"]:
+                # Los administradores son personal directivo; podemos mostrar su correo o una etiqueta clara
+                nombre_final = f"Admin ({usuario.email})"
             else:
                 nombre_final = "Sin nombre"
 
@@ -546,11 +543,21 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         else:
             rol_limpio = rol_raw
         
-        # 1. Verificar si el usuario ya existe en el sistema
-        usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == payload.correo).first()
+        correo_input = payload.correo.strip().lower()
+
+        # 1. 🛡️ Validar si el correo ya existe en la tabla de CLIENTES
+        cliente_existente = db.query(models.Cliente).join(models.Usuario).filter(models.Usuario.email == correo_input).first()
+        if cliente_existente:
+            raise HTTPException(
+                status_code=400,
+                detail="Este correo ya se encuentra registrado como cliente. El personal debe utilizar un correo único y diferente."
+            )
+
+        # 2. Verificar si ya existe en la tabla general de usuarios
+        usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == correo_input).first()
 
         if usuario_existente:
-            # Si ya existe, actualizamos su rol y marcamos primer ingreso para su contraseña provisoria
+            # Si ya existe pero es de personal (ej. actualizando datos de otro técnico)
             password_segura = payload.password[:72] if payload.password else "Temporal123"
             usuario_existente.password_hash = get_password_hash(password_segura)
             usuario_existente.rol = rol_limpio
@@ -558,13 +565,12 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
             usuario_existente.primer_ingreso = True
             db.commit()
             db.refresh(usuario_existente)
-            
             nuevo_usuario = usuario_existente
         else:
-            # 2. Si no existe, lo creamos normalmente
+            # 3. Si no existe en ningún lado, lo creamos normalmente
             password_segura = payload.password[:72] if payload.password else "Temporal123"
             nuevo_usuario = models.Usuario(
-                email=payload.correo,
+                email=correo_input,
                 password_hash=get_password_hash(password_segura),
                 rol=rol_limpio,
                 activo=True,
@@ -574,9 +580,8 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
             db.commit()
             db.refresh(nuevo_usuario)
 
-        # 3. Validar y registrar en la tabla de técnicos/personal si corresponde
+        # 4. Validar y registrar en la tabla de técnicos/personal si corresponde
         if rol_limpio in ["tecnico", "recepcionista"]:
-            # Verificamos si ya tiene un registro previo como técnico para no duplicar
             tecnico_existente = db.query(models.Tecnico).filter(models.Tecnico.usuario_id == nuevo_usuario.id).first()
             if not tecnico_existente:
                 nuevo_tecnico = models.Tecnico(
@@ -587,12 +592,13 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
                 db.add(nuevo_tecnico)
                 db.commit()
             else:
-                # Si ya existía en la tabla técnico, actualizamos su nombre/especialidad si es necesario
                 tecnico_existente.nombre_completo = payload.nombre
                 db.commit()
 
-        return {"message": "Personal registrado o actualizado con éxito", "usuario": nuevo_usuario}
+        return {"message": "Personal registrado con éxito", "usuario": nuevo_usuario}
         
+    except HTTPException as he:
+        raise he
     except Exception as e:
         db.rollback()
         print("ERROR EN BD:", str(e))
