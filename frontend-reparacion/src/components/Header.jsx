@@ -1,10 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, ArrowLeft, Wrench, Bell } from 'lucide-react';
+import axios from 'axios';
 
 export default function Header({ userId, userRole, userEmail, customTitle, onBack, logoutPath, children }) {
   const navigate = useNavigate();
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([]);
+
+  // Cargar notificaciones al montar o al cambiar de usuario/rol
+  useEffect(() => {
+    if (userId && userRole) {
+      cargarNotificaciones();
+    }
+  }, [userId, userRole]);
+
+  const cargarNotificaciones = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const response = await axios.get(`${API_URL}/api/notificaciones/`, {
+        params: { usuario_id: userId, rol: userRole }
+      });
+      setNotificaciones(response.data);
+    } catch (error) {
+      console.error("Error al cargar notificaciones:", error);
+    }
+  };
 
   const getLogoutPath = () => {
     if (logoutPath) return logoutPath;
@@ -66,26 +87,8 @@ export default function Header({ userId, userRole, userEmail, customTitle, onBac
         )}
         
         <div className="flex items-center gap-3 relative">
-          {/* 🔔 BOTÓN DE NOTIFICACIONES */}
-          <div className="relative">
-            <button 
-              onClick={() => setMostrarNotificaciones(!mostrarNotificaciones)}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition-all relative focus:outline-none cursor-pointer shadow-sm flex items-center justify-center"
-              title="Notificaciones"
-            >
-              <Bell className="w-4 h-4 text-slate-300" />
-              {/* Puntito indicador de alerta */}
-              <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-            </button>
-
-            {/* MENÚ FLOTANTE DE NOTIFICACIONES */}
-            {mostrarNotificaciones && (
-              <div className="absolute right-0 mt-3 z-50 shadow-2xl">
-                <CentroNotificaciones usuarioId={userId} rol={userRole} />
-              </div>
-            )}
-          </div>
-
+          
+          
           {children}
 
           <button 
