@@ -24,7 +24,7 @@ const [errorMessage, setErrorMessage] = useState('');
   const [modalError, setModalError] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, techId: null });
  const API_URL = import.meta.env.VITE_API_URL;
- 
+ const [userId, setUserId] = useState(null); // 👈 Añade este estado si no lo tienes
   const [servicios, setServicios] = useState([]);
   const [selectedServicio, setSelectedServicio] = useState(null);
 
