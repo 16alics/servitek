@@ -986,10 +986,12 @@ def actualizar_estado_servicio(servicio_id: int, body: dict, db: Session = Depen
         print("ERROR AL ACTUALIZAR ESTADO:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
     
+from typing import Optional
+
 @router.get("/notificaciones/")
 def obtener_notificaciones(
-    usuario_id: int, 
-    rol: str, 
+    usuario_id: Optional[int] = None, 
+    rol: str = "cliente", 
     db: Session = Depends(get_db)
 ):
     try:

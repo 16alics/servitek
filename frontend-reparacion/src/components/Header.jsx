@@ -18,9 +18,9 @@ export default function Header({ userId, userRole, userEmail, customTitle, onBac
   const cargarNotificaciones = async () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || '';
-      const response = await axios.get(`${API_URL}/api/notificaciones/`, {
-        params: { usuario_id: userId, rol: userRole }
-      });
+     const response = await axios.get(`${API_URL}/api/servicios/notificaciones/`, {
+  params: { usuario_id: userId, rol: userRole }
+});
       setNotificaciones(response.data);
     } catch (error) {
       console.error("Error al cargar notificaciones:", error);
