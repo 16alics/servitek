@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, ArrowLeft, Wrench } from 'lucide-react';
+import { LogOut, ArrowLeft, Wrench, Bell } from 'lucide-react';
+import CentroNotificaciones from './CentroNotificaciones'; // Asegúrate de tener esta ruta correcta
 
-export default function Header({ userRole, userEmail, customTitle, onBack, logoutPath, children }) {
+export default function Header({ userId, userRole, userEmail, customTitle, onBack, logoutPath, children }) {
   const navigate = useNavigate();
+  const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
 
   const getLogoutPath = () => {
     if (logoutPath) return logoutPath;
-    // Si es cliente va al login de cliente, si es admin/técnico va al login de trabajador
     if (userRole === 'cliente') {
       return '/login'; 
     } else {
@@ -17,7 +18,7 @@ export default function Header({ userRole, userEmail, customTitle, onBack, logou
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate(getLogoutPath()); // 👈 Llamando correctamente a la función
+    navigate(getLogoutPath());
   };
 
   const roleNames = {
@@ -32,6 +33,7 @@ export default function Header({ userRole, userEmail, customTitle, onBack, logou
   return (
     <header className="bg-slate-900/90 border-b border-slate-800 text-slate-100 px-6 py-4 shadow-2xl backdrop-blur-xl flex flex-wrap justify-between items-center gap-4 print:hidden sticky top-0 z-50">
       
+      {/* LADO IZQUIERDO: Volver y Logo */}
       <div className="flex items-center gap-3">
         {onBack && (
           <button 
@@ -42,7 +44,6 @@ export default function Header({ userRole, userEmail, customTitle, onBack, logou
           </button>
         )}
 
-        {/* LOGO SERVITEK ESTILIZADO */}
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-600/30 flex items-center justify-center">
             <Wrench className="w-5 h-5" />
@@ -57,14 +58,35 @@ export default function Header({ userRole, userEmail, customTitle, onBack, logou
         </span>
       </div>
       
+      {/* LADO DERECHO: Email, Notificaciones y Botones */}
       <div className="flex items-center gap-4 sm:gap-6">
         {userEmail && (
-          <span className="text-xs sm:text-sm font-medium bg-slate-950/60 border border-slate-800 px-4 py-2 rounded-xl text-slate-300 shadow-inner">
+          <span className="text-xs sm:text-sm font-medium bg-slate-950/60 border border-slate-800 px-4 py-2 rounded-xl text-slate-300 shadow-inner hidden md:inline-block">
             {userEmail}
           </span>
         )}
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 relative">
+          {/* 🔔 BOTÓN DE NOTIFICACIONES */}
+          <div className="relative">
+            <button 
+              onClick={() => setMostrarNotificaciones(!mostrarNotificaciones)}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition-all relative focus:outline-none cursor-pointer shadow-sm flex items-center justify-center"
+              title="Notificaciones"
+            >
+              <Bell className="w-4 h-4 text-slate-300" />
+              {/* Puntito indicador de alerta */}
+              <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+            </button>
+
+            {/* MENÚ FLOTANTE DE NOTIFICACIONES */}
+            {mostrarNotificaciones && (
+              <div className="absolute right-0 mt-3 z-50 shadow-2xl">
+                <CentroNotificaciones usuarioId={userId} rol={userRole} />
+              </div>
+            )}
+          </div>
+
           {children}
 
           <button 
