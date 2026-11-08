@@ -545,7 +545,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         
         correo_input = payload.correo.strip().lower()
 
-        # 1. Validar estrictamente si el correo ya está registrado en el sistema
+        # Validar estrictamente si el correo ya está registrado en el sistema
         usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == correo_input).first()
         if usuario_existente:
             raise HTTPException(
@@ -553,7 +553,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
                 detail="Este correo ya está registrado. El personal debe utilizar un correo institucional o independiente."
             )
 
-        # 2. Crear las credenciales del trabajador en la tabla usuarios
+        # Crear las credenciales del trabajador en la tabla usuarios
         password_segura = payload.password[:72] if payload.password else "Temporal123"
         nuevo_usuario = models.Usuario(
             email=correo_input,
@@ -566,7 +566,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         db.commit()
         db.refresh(nuevo_usuario)
 
-        # 3. Registrar exclusivamente en su tabla correspondiente (tecnicos/personal)
+        # Registrar exclusivamente en su tabla correspondiente (tecnicos/personal)
         if rol_limpio in ["tecnico", "recepcionista"]:
             nuevo_tecnico = models.Tecnico(
                 usuario_id=nuevo_usuario.id,
@@ -584,6 +584,7 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         db.rollback()
         print("ERROR EN BD:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+    
 @router.post("/admin/reset-password-automatico/{usuario_id}")
 def resetear_password_automatico(
     usuario_id: int, 

@@ -134,7 +134,7 @@ const handleChange = (e) => {
     });
   };
 
-  // 3. Función para enviar los datos al backend (la que faltaba)
+ // 3. Función para enviar los datos al backend
   const handleRegistrarPersonal = async (e) => {
     e.preventDefault();
     try {
@@ -146,23 +146,30 @@ const handleChange = (e) => {
         body: JSON.stringify(formData),
       });
 
+      // 1. Convertimos la respuesta a JSON siempre (tanto si es éxito como error)
+      const data = await response.json();
+
+      // 2. Si la respuesta no es exitosa, usamos el "detail" que envió el backend
       if (!response.ok) {
-        throw new Error('Error al registrar el personal');
+        throw new Error(data.detail || 'Error al registrar el personal');
       }
 
-      const data = await response.json();
       console.log('Personal registrado con éxito:', data);
+      
+      // Si usas toast o alert para éxito:
+      toast.success('¡Personal registrado con éxito!');
 
       // Cerrar modal y limpiar formulario
       setIsModalOpen(false);
       setFormData({ nombre: '', correo: '', password: '', rol: '', especialidad: '' });
       
-      // Si tienes una función para recargar la tabla de usuarios, ponla aquí
+      // Recargar tabla si la tienes
       // cargarUsuarios();
 
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Hubo un error al registrar el personal');
+      // 3. Aquí mostramos el mensaje exacto en tu toast (ej. "Este correo ya está registrado...")
+      toast.error(error.message); 
     }
   };
   return (
