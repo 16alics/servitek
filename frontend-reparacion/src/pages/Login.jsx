@@ -47,10 +47,16 @@ const handleLogin = async (e) => {
       const primerIngreso = response.data.primer_ingreso; 
 
       if (response.data.access_token) {
-        // Guardamos las credenciales y datos temporales
+        // Guardamos las credenciales y datos necesarios incluyendo el ID
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('userRole', rol);
         localStorage.setItem('tempEmail', username);
+        
+        // 👈 ¡AQUÍ GUARDAS EL ID QUE DEVUELVE EL BACKEND!
+        localStorage.setItem('usuario', JSON.stringify({
+          id: response.data.id || response.data.usuario_id,
+          rol: rol
+        }));
 
         // 🔍 Evaluamos si es su primer ingreso
         if (primerIngreso) {
