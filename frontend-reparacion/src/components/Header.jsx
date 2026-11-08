@@ -19,13 +19,13 @@ const cargarNotificaciones = async () => {
   try {
     const API_URL = import.meta.env.VITE_API_URL || '';
     
-    // Recuperamos de forma segura los datos del usuario logueado en localStorage
+    // Leemos el usuario guardado en el localStorage
     const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
     
-    // Priorizamos la prop, luego el localStorage, y por defecto 'cliente'
-    const currentRole = userRole || usuarioStorage.rol || 'cliente';
     const currentId = userId || usuarioStorage.id || usuarioStorage.usuario_id;
+    const currentRole = userRole || usuarioStorage.rol || 'cliente';
 
+    // La petición debe incluir obligatoriamente el usuario_id
     const response = await axios.get(`${API_URL}/api/servicios/notificaciones/`, {
       params: { 
         usuario_id: currentId, 

@@ -309,7 +309,12 @@ const handleReset = async (e) => {
     setError(err.response?.data?.detail || 'Error al restablecer la clave');
   }
 };
-
+// Cuando recibes la respuesta exitosa del login-cliente:
+localStorage.setItem('token', response.data.access_token);
+localStorage.setItem('usuario', JSON.stringify({
+  id: response.data.id || response.data.usuario_id,
+  rol: response.data.rol
+}));
 
 // 🔍 2. LÓGICA DE FILTRADO (Colócala justo antes del return)
   const serviciosFiltrados = servicios.filter(s => {
