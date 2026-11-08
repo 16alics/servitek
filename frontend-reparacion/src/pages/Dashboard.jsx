@@ -24,7 +24,7 @@ const [errorMessage, setErrorMessage] = useState('');
   const [modalError, setModalError] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, techId: null });
  const API_URL = import.meta.env.VITE_API_URL;
- const [userId, setUserId] = useState(null); // 👈 Añade este estado si no lo tienes
+ const [userData, setUserData] = useState(null); // 👈 Añade este estado si no lo tienes
   const [servicios, setServicios] = useState([]);
   const [selectedServicio, setSelectedServicio] = useState(null);
 
@@ -329,7 +329,7 @@ const handleReset = async (e) => {
   });
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative print:bg-white selection:bg-blue-600 selection:text-white">
-   <Header userId={userId} userRole={userRole} userEmail={userEmail} />
+   <Header userId={userData?.id} userRole="clientte" userEmail={userEmail} />
 
       <main className="flex-1 p-8 print:p-0">
         <div className="max-w-6xl mx-auto space-y-8 print:space-y-0">
