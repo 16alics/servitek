@@ -19,9 +19,12 @@ const cargarNotificaciones = async () => {
   try {
     const API_URL = import.meta.env.VITE_API_URL || '';
     
-    // Forzamos valores seguros si no llegan por props
-    const currentRole = userRole || "cliente";
-    const currentId = userId || localStorage.getItem("usuario_id");
+    // Recuperamos de forma segura los datos del usuario logueado en localStorage
+    const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
+    
+    // Priorizamos la prop, luego el localStorage, y por defecto 'cliente'
+    const currentRole = userRole || usuarioStorage.rol || 'cliente';
+    const currentId = userId || usuarioStorage.id || usuarioStorage.usuario_id;
 
     const response = await axios.get(`${API_URL}/api/servicios/notificaciones/`, {
       params: { 
@@ -29,6 +32,7 @@ const cargarNotificaciones = async () => {
         rol: currentRole 
       }
     });
+    
     setNotificaciones(response.data);
   } catch (error) {
     console.error("Error al cargar notificaciones:", error);
@@ -45,9 +49,13 @@ const cargarNotificaciones = async () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate(getLogoutPath());
-  };
+  // 1. Limpiar todos los datos de sesión almacenados
+  localStorage.removeItem('token');
+  localStorage.removeItem('usuario');
+  
+  // 2. Redirigir de forma explícita al inicio o login de clientes
+  navigate('/'); // O a tu ruta específica, ej: '/login-cliente'
+};
 
   const roleNames = {
     'admin': 'Administrador',
