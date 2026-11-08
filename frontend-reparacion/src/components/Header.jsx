@@ -91,7 +91,10 @@ export default function Header({ userId, userRole, userEmail, customTitle, onBac
           {/* 🔔 BOTÓN DE NOTIFICACIONES */}
           <div className="relative">
             <button 
-              onClick={() => setMostrarNotificaciones(!mostrarNotificaciones)}
+              onClick={() => {
+                setMostrarNotificaciones(!mostrarNotificaciones);
+                cargarNotificaciones(); // 👈 Fuerza la recarga de datos al hacer clic en la campana
+              }}
               className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition-all relative focus:outline-none cursor-pointer shadow-sm flex items-center justify-center"
               title="Notificaciones"
             >

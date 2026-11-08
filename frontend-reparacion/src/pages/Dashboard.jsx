@@ -329,9 +329,11 @@ const handleReset = async (e) => {
   });
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative print:bg-white selection:bg-blue-600 selection:text-white">
-      <Header userRole={userRole} userEmail={userEmail}>
-        <NotificacionesCampana servicios={servicios} />
-      </Header>
+      <Header 
+  userId={userData.id}   // 👈 Asegúrate de que esto tenga el ID numérico del usuario logueado
+  userRole="cliente" 
+  userEmail={userEmail} 
+/>
 
       <main className="flex-1 p-8 print:p-0">
         <div className="max-w-6xl mx-auto space-y-8 print:space-y-0">
