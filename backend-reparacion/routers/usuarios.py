@@ -545,51 +545,41 @@ def registrar_usuario_general(payload: UsuarioGeneralCreate, db: Session = Depen
         
         correo_input = payload.correo.strip().lower()
 
-        # 1. Buscamos si el usuario ya existe en el sistema global
+        # 1. Validar estrictamente si el correo ya está registrado en el sistema
         usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == correo_input).first()
-
         if usuario_existente:
-            # Si ya existe (ej: era cliente), actualizamos su rol para que ahora tenga privilegios de personal
-            password_segura = payload.password[:72] if payload.password else "Temporal123"
-            usuario_existente.password_hash = get_password_hash(password_segura)
-            usuario_existente.rol = rol_limpio # Lo ascendemos a técnico, recepcionista o admin
-            usuario_existente.activo = True
-            usuario_existente.primer_ingreso = True
-            db.commit()
-            db.refresh(usuario_existente)
-            
-            nuevo_usuario = usuario_existente
-        else:
-            # 2. Si no existe, creamos el usuario desde cero
-            password_segura = payload.password[:72] if payload.password else "Temporal123"
-            nuevo_usuario = models.Usuario(
-                email=correo_input,
-                password_hash=get_password_hash(password_segura),
-                rol=rol_limpio,
-                activo=True,
-                primer_ingreso=True
+            raise HTTPException(
+                status_code=400,
+                detail="Este correo ya está registrado. El personal debe utilizar un correo institucional o independiente."
             )
-            db.add(nuevo_usuario)
-            db.commit()
-            db.refresh(nuevo_usuario)
 
-        # 3. Gestionar la tabla de técnicos sin tocar su posible historial de cliente
+        # 2. Crear las credenciales del trabajador en la tabla usuarios
+        password_segura = payload.password[:72] if payload.password else "Temporal123"
+        nuevo_usuario = models.Usuario(
+            email=correo_input,
+            password_hash=get_password_hash(password_segura),
+            rol=rol_limpio,
+            activo=True,
+            primer_ingreso=True
+        )
+        db.add(nuevo_usuario)
+        db.commit()
+        db.refresh(nuevo_usuario)
+
+        # 3. Registrar exclusivamente en su tabla correspondiente (tecnicos/personal)
         if rol_limpio in ["tecnico", "recepcionista"]:
-            tecnico_existente = db.query(models.Tecnico).filter(models.Tecnico.usuario_id == nuevo_usuario.id).first()
-            if not tecnico_existente:
-                nuevo_tecnico = models.Tecnico(
-                    usuario_id=nuevo_usuario.id,
-                    nombre_completo=payload.nombre,
-                    especialidad=payload.especialidad if payload.especialidad and payload.especialidad.strip() else rol_limpio
-                )
-                db.add(nuevo_tecnico)
-                db.commit()
-            else:
-                tecnico_existente.nombre_completo = payload.nombre
-                db.commit()
+            nuevo_tecnico = models.Tecnico(
+                usuario_id=nuevo_usuario.id,
+                nombre_completo=payload.nombre,
+                especialidad=payload.especialidad if payload.especialidad and payload.especialidad.strip() else rol_limpio
+            )
+            db.add(nuevo_tecnico)
+            db.commit()
 
-        return {"message": "Personal registrado o actualizado correctamente", "usuario": nuevo_usuario}
+        return {"message": "Personal registrado con éxito", "usuario": nuevo_usuario}
         
+    except HTTPException as he:
+        raise he
     except Exception as e:
         db.rollback()
         print("ERROR EN BD:", str(e))
