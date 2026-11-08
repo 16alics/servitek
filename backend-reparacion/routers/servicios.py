@@ -995,30 +995,39 @@ def obtener_notificaciones(
     db: Session = Depends(get_db)
 ):
     try:
-        rol_str = rol.lower().strip()
+        rol_str = rol.lower().strip() if rol else "cliente"
 
+        # CASO 1: CLIENTE (Filtrado estricto por sus propios equipos)
         if rol_str == "cliente":
             if not usuario_id:
-                return []
+                return []  # 🔒 Seguridad: Si no hay ID de cliente, no muestra nada
             
-            # 1. Encontrar el perfil de cliente usando el usuario_id de la tabla clientes
             cliente = db.query(models.Cliente).filter(models.Cliente.usuario_id == usuario_id).first()
             if not cliente:
                 return []
 
-            # 2. Obtener el historial haciendo el join directo desde HistorialEstado -> Servicio -> Equipo -> Cliente
+            equipos_ids = [e.id for e in db.query(models.Equipo).filter(models.Equipo.cliente_id == cliente.id).all()]
+            if not equipos_ids:
+                return []
+
+            servicios_ids = [s.id for s in db.query(models.Servicio).filter(models.Servicio.equipo_id.in_(equipos_ids)).all()]
+            if not servicios_ids:
+                return []
+
             historiales = db.query(models.HistorialEstado)\
-                .join(models.Servicio, models.HistorialEstado.servicio_id == models.Servicio.id)\
-                .join(models.Equipo, models.Servicio.equipo_id == models.Equipo.id)\
-                .filter(models.Equipo.cliente_id == cliente.id)\
+                .filter(models.HistorialEstado.servicio_id.in_(servicios_ids))\
                 .order_by(models.HistorialEstado.fecha_cambio.desc())\
                 .limit(15).all()
-        else:
-            # Si es personal (técnico/recepción/admin), ven todo el taller
+
+        # CASO 2: PERSONAL AUTORIZADO (Técnico, Recepción, Admin)
+        elif rol_str in ["tecnico", "recepcion", "admin", "personal"]:
             historiales = db.query(models.HistorialEstado)\
                 .order_by(models.HistorialEstado.fecha_cambio.desc())\
                 .limit(25).all()
+        else:
+            return []
 
+        # Construcción de la respuesta
         lista_notificaciones = []
         for h in historiales:
             estado_ant = h.estado_anterior or "Inicio"

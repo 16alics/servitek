@@ -15,17 +15,25 @@ export default function Header({ userId, userRole, userEmail, customTitle, onBac
     }
   }, [userId, userRole]);
 
-  const cargarNotificaciones = async () => {
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-     const response = await axios.get(`${API_URL}/api/servicios/notificaciones/`, {
-  params: { usuario_id: userId, rol: userRole }
-});
-      setNotificaciones(response.data);
-    } catch (error) {
-      console.error("Error al cargar notificaciones:", error);
-    }
-  };
+const cargarNotificaciones = async () => {
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    
+    // Forzamos valores seguros si no llegan por props
+    const currentRole = userRole || "cliente";
+    const currentId = userId || localStorage.getItem("usuario_id");
+
+    const response = await axios.get(`${API_URL}/api/servicios/notificaciones/`, {
+      params: { 
+        usuario_id: currentId, 
+        rol: currentRole 
+      }
+    });
+    setNotificaciones(response.data);
+  } catch (error) {
+    console.error("Error al cargar notificaciones:", error);
+  }
+};
 
   const getLogoutPath = () => {
     if (logoutPath) return logoutPath;
@@ -104,30 +112,38 @@ export default function Header({ userId, userRole, userEmail, customTitle, onBac
               )}
             </button>
 
-            {/* MENÚ FLOTANTE DE NOTIFICACIONES (AUTOGESTIONADO) */}
-            {mostrarNotificaciones && (
-              <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-slate-900 border border-slate-700 shadow-2xl rounded-xl p-4 z-50 text-slate-100">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
-                  <h3 className="font-bold text-sm text-slate-200">Notificaciones</h3>
-                  <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
-                    {userRole === 'cliente' ? 'Mis Equipos' : 'General Taller'}
-                  </span>
-                </div>
+         {/* Menú desplegable de Notificaciones */}
+{mostrarNotificaciones && (
+  <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+    
+    {/* ENCABEZADO DEL DESPLEGABLE */}
+    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-950">
+      <h3 className="text-sm font-semibold text-white">Notificaciones</h3>
+      
+      {/* 👈 AQUÍ COLOCAS LA ETIQUETA */}
+      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900 text-blue-200">
+        {userRole === "cliente" ? "Mis Equipos" : "General Taller"}
+      </span>
+    </div>
 
-                {notificaciones.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4">No hay notificaciones recientes.</p>
-                ) : (
-                  notificaciones.map((n) => (
-                    <div key={n.id} className="mb-2.5 border-b border-slate-800 pb-2 text-xs hover:bg-slate-800/50 p-2 rounded-lg transition">
-                      <p className="font-medium text-slate-200">{n.mensaje}</p>
-                      <span className="text-[10px] text-slate-400 block mt-1">
-                        {new Date(n.fecha).toLocaleString()}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+    {/* LISTA DE NOTIFICACIONES */}
+    <div className="max-h-80 overflow-y-auto p-2">
+      {notificaciones.length === 0 ? (
+        <p className="text-xs text-slate-400 text-center py-4">No hay notificaciones recientes.</p>
+      ) : (
+        notificaciones.map((notif) => (
+          <div key={notif.id} className="p-2 mb-2 bg-slate-800/60 rounded border border-slate-700/50">
+            <p className="text-xs text-slate-200 font-medium">{notif.mensaje}</p>
+            <span className="text-[10px] text-slate-400">
+              {new Date(notif.fecha).toLocaleString()}
+            </span>
+          </div>
+        ))
+      )}
+    </div>
+
+  </div>
+)}
           </div>
 
           {children}
