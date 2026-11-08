@@ -28,7 +28,8 @@ class Token(BaseModel):
     token_type: str
     primer_ingreso: bool = False
     rol: Optional[str] = None
-
+    id: Optional[int] = None     
+    usuario_id: Optional[int] = None
 class TokenData(BaseModel):
     email: Optional[str] = None
 
