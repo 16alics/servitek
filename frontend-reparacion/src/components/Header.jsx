@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, ArrowLeft, Wrench, Bell } from 'lucide-react';
-import CentroNotificaciones from './CentroNotificaciones'; // Asegúrate de tener esta ruta correcta
 
 export default function Header({ userId, userRole, userEmail, customTitle, onBack, logoutPath, children }) {
   const navigate = useNavigate();
