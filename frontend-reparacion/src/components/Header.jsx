@@ -88,7 +88,45 @@ export default function Header({ userId, userRole, userEmail, customTitle, onBac
         
         <div className="flex items-center gap-3 relative">
           
-          
+          {/* 🔔 BOTÓN DE NOTIFICACIONES */}
+          <div className="relative">
+            <button 
+              onClick={() => setMostrarNotificaciones(!mostrarNotificaciones)}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition-all relative focus:outline-none cursor-pointer shadow-sm flex items-center justify-center"
+              title="Notificaciones"
+            >
+              <Bell className="w-4 h-4 text-slate-300" />
+              {notificaciones.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+              )}
+            </button>
+
+            {/* MENÚ FLOTANTE DE NOTIFICACIONES (AUTOGESTIONADO) */}
+            {mostrarNotificaciones && (
+              <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto bg-slate-900 border border-slate-700 shadow-2xl rounded-xl p-4 z-50 text-slate-100">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                  <h3 className="font-bold text-sm text-slate-200">Notificaciones</h3>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
+                    {userRole === 'cliente' ? 'Mis Equipos' : 'General Taller'}
+                  </span>
+                </div>
+
+                {notificaciones.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">No hay notificaciones recientes.</p>
+                ) : (
+                  notificaciones.map((n) => (
+                    <div key={n.id} className="mb-2.5 border-b border-slate-800 pb-2 text-xs hover:bg-slate-800/50 p-2 rounded-lg transition">
+                      <p className="font-medium text-slate-200">{n.mensaje}</p>
+                      <span className="text-[10px] text-slate-400 block mt-1">
+                        {new Date(n.fecha).toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
           {children}
 
           <button 
