@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { NotificacionesCampana } from '../components/NotificacionesCampana';
 export default function Dashboard() {
   const navigate = useNavigate();
+  const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
   const [clientes, setClientes] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
   const [userRole, setUserRole] = useState('');
@@ -309,12 +310,7 @@ const handleReset = async (e) => {
     setError(err.response?.data?.detail || 'Error al restablecer la clave');
   }
 };
-// Cuando recibes la respuesta exitosa del login-cliente:
-localStorage.setItem('token', response.data.access_token);
-localStorage.setItem('usuario', JSON.stringify({
-  id: response.data.id || response.data.usuario_id,
-  rol: response.data.rol
-}));
+
 
 // 🔍 2. LÓGICA DE FILTRADO (Colócala justo antes del return)
   const serviciosFiltrados = servicios.filter(s => {
@@ -334,7 +330,11 @@ localStorage.setItem('usuario', JSON.stringify({
   });
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative print:bg-white selection:bg-blue-600 selection:text-white">
-   <Header userId={userData?.id} userRole="cliente" userEmail={userEmail} />
+   <Header 
+        userId={usuarioStorage.id || usuarioStorage.usuario_id} 
+        userRole={usuarioStorage.rol || 'cliente'} 
+        userEmail={usuarioStorage.email || ''} 
+      />
 
       <main className="flex-1 p-8 print:p-0">
         <div className="max-w-6xl mx-auto space-y-8 print:space-y-0">
