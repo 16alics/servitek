@@ -417,16 +417,19 @@ const handleReset = async (e) => {
                     {serviciosFiltrados.length > 0 ? (
                       serviciosFiltrados.map(s => (
                         <div 
-                          key={s.id} 
-                          onClick={async () => {
-                            setSelectedServicioModal(s);
-                            try {
-                              const resFotos = await axios.get(`${API_URL}/api/servicios/${s.id}/fotos`);
-                              setListaFotos(resFotos.data);
-                            } catch (error) {
-                              setListaFotos([]);
-                            }
-                          }}
+                        key={s.id} 
+  onClick={async (e) => {
+    // 🛡️ Si el clic provino de un botón (como Garantía o Anular), ignoramos el evento de la tarjeta
+    if (e.target.closest('button')) return;
+
+    setSelectedServicioModal(s);
+    try {
+      const resFotos = await axios.get(`${API_URL}/api/servicios/${s.id}/fotos`);
+      setListaFotos(resFotos.data);
+    } catch (error) {
+      setListaFotos([]);
+    }
+  }}
                           className="border border-gray-200 rounded-2xl p-5 shadow-sm relative overflow-hidden bg-white hover:shadow-md transition cursor-pointer group"
                         >
                           <div className="absolute top-0 left-0 w-1.5 bottom-0 bg-blue-600 group-hover:bg-blue-700 transition"></div>
