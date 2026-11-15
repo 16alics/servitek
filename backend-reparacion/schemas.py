@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional,List,Any
 from datetime import datetime
 from models import EstadoServicioEnum
@@ -192,3 +192,41 @@ class DiagnosticoUpdateSchema(BaseModel):
     actividades_realizadas: Optional[str] = None
     costo_estimado: Optional[float] = None
     repuestos: Optional[List[RepuestoItemSchema]] = []
+
+class IncidenteCreate(BaseModel):
+    orden_id: int
+    usuario_id: int
+    descripcion: str
+    canal_reporte: str = "Web"        # "Web" o "Presencial"[cite: 11]
+    categoria: str = "Hardware"       # Hardware, Software / Portal Web, Acceso y Cuentas, Trazabilidad y QR
+    prioridad: str = "P1"             # Por defecto P1 (< 1 hora) para reingresos por garantía
+
+class IncidenteResolver(BaseModel):
+    solucion_remota: bool             # ¿Solución Remota Posible? (Sí / No)[cite: 12]
+    diagnostico_resolucion: str
+    es_garantia: bool = True          #[cite: 11, 12]
+    costo_cero: bool = True           #[cite: 11, 12]
+
+class IncidenteCSAT(BaseModel):
+    calificacion_csat: int = Field(..., ge=1, le=5) #[cite: 14]
+
+class IncidenteResponse(BaseModel):
+    id: int
+    orden_id: int
+    usuario_id: int
+    descripcion: str
+    canal_reporte: str
+    categoria: str
+    prioridad: str
+    sla_limite: Optional[datetime]
+    estado: str
+    solucion_remota: Optional[bool]
+    es_garantia: bool
+    costo_cero: bool
+    diagnostico_resolucion: Optional[str]
+    fecha_creacion: datetime
+    fecha_cierre: Optional[datetime]
+    calificacion_csat: Optional[int]
+
+    class Config:
+        from_attributes = True
