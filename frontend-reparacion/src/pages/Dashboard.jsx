@@ -28,7 +28,8 @@ const [errorMessage, setErrorMessage] = useState('');
  const [userData, setUserData] = useState(null); // 👈 Añade este estado si no lo tienes
   const [servicios, setServicios] = useState([]);
   const [selectedServicio, setSelectedServicio] = useState(null);
-
+const [selectedOrdenParaIncidente, setSelectedOrdenParaIncidente] = useState(null);
+const [mostrarModalIncidente, setMostrarModalIncidente] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState("Listo para entrega");
   const [busqueda, setBusqueda] = useState("");
   // Estados para Modal de Servicio (Cliente)
@@ -560,6 +561,17 @@ const handleReset = async (e) => {
               </div>
             )}
             
+            {mostrarModalIncidente && selectedOrdenParaIncidente && (
+  <ReportarIncidenteModal 
+    orden={selectedOrdenParaIncidente} 
+    onClose={() => setMostrarModalIncidente(false)} 
+    onSuccess={() => {
+      // Recargar tus servicios o lista si es necesario
+    }} 
+  />
+)}
+
+
             {/* Datos generales */}
             <div className="space-y-3 text-sm text-gray-600 text-left mt-4">
               <p>
