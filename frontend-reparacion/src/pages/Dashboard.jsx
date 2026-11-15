@@ -467,22 +467,23 @@ const handleReset = async (e) => {
                             </div>
                           )}
                         {/* 2. NUEVO: Botón para Reportar Incidente o Garantía si ya fue Entregado */}
-        {s.estado === 'Entregado' && (
-          <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                // Aquí activas tu modal de reporte pasándole el equipo/orden actual (s)
-                setSelectedOrdenParaIncidente(s);
-                setMostrarModalIncidente(true);
-              }}
-              className="text-amber-600 text-xs font-bold hover:text-amber-800 transition cursor-pointer flex items-center gap-1"
-            >
-              ⚠️ Reportar Garantía / Falla
-            </button>
-          </div>
-        )}
+{s.estado === 'Entregado' && (
+  <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+    <button 
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        e.nativeEvent.stopImmediatePropagation(); // 👈 Esto frena de golpe cualquier otro evento en la tarjeta
+        setSelectedOrdenParaIncidente(s);
+        setMostrarModalIncidente(true);
+      }}
+      className="text-amber-600 text-xs font-bold hover:text-amber-800 transition cursor-pointer flex items-center gap-1"
+    >
+      ⚠️ Reportar Garantía / Falla
+    </button>
+  </div>
+)}
 
 
                         </div>
