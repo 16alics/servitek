@@ -472,6 +472,7 @@ const handleReset = async (e) => {
             <button 
               onClick={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 // Aquí activas tu modal de reporte pasándole el equipo/orden actual (s)
                 setSelectedOrdenParaIncidente(s);
                 setMostrarModalIncidente(true);
