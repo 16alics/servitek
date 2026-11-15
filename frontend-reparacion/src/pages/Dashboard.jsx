@@ -6,7 +6,6 @@ import Header from '../components/Header';
 import QRModal from '../components/QRModal';
 import ReportarIncidenteModal from './ReportarIncidenteModal'; 
 import { toast } from 'react-toastify';
-import { NotificacionesCampana } from '../components/NotificacionesCampana';
 export default function Dashboard() {
   const navigate = useNavigate();
   const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
