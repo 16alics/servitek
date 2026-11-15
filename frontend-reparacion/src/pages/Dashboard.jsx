@@ -477,11 +477,11 @@ const handleReset = async (e) => {
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
-        e.nativeEvent.stopImmediatePropagation(); // 👈 Esto frena de golpe cualquier otro evento en la tarjeta
+        e.nativeEvent.stopImmediatePropagation();
         setSelectedOrdenParaIncidente(s);
         setMostrarModalIncidente(true);
       }}
-      className="text-amber-600 text-xs font-bold hover:text-amber-800 transition cursor-pointer flex items-center gap-1"
+      className="text-amber-600 text-xs font-bold hover:text-amber-800 transition cursor-pointer flex items-center gap-1 relative z-10"
     >
       ⚠️ Reportar Garantía / Falla
     </button>
