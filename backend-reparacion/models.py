@@ -151,29 +151,27 @@ class Incidente(Base):
     __tablename__ = "incidentes"
 
     id = Column(Integer, primary_key=True, index=True)
-    orden_id = Column(Integer, ForeignKey("ordenes_servicio.id"), nullable=False)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    orden_id = Column(Integer, nullable=False, index=True)   # Referencia lógica a la orden
+    usuario_id = Column(Integer, nullable=False, index=True)  # Referencia lógica al usuario
     
     # Detalles del reporte
     descripcion = Column(Text, nullable=False)
-    canal_reporte = Column(String(20), default="Web")  # "Web" vs "Presencial"[cite: 11]
+    canal_reporte = Column(String(20), default="Web")
     
     # Categorización y Priorización (Matriz SLA)
-    categoria = Column(String(50), default="Hardware")  # Network, App, Hardware, Trazabilidad[cite: 11]
-    prioridad = Column(String(10), default="P1")        # P1 (<1h), P2 (<4h), P3 (<8h), P4 (<24h)
+    categoria = Column(String(50), default="Hardware")
+    prioridad = Column(String(10), default="P1")
     sla_limite = Column(DateTime, nullable=True)
     
     # Flujo de Resolución y Garantía
-    estado = Column(String(30), default="Abierto")      # Abierto, En Revision, Solucionado Remotamente, En Taller, Cerrado
-    solucion_remota = Column(Boolean, nullable=True)    # True = FCR Remoto, False = Escala a Taller
-    es_garantia = Column(Boolean, default=True)         #
-    costo_cero = Column(Boolean, default=True)          #
+    estado = Column(String(30), default="Abierto")
+    solucion_remota = Column(Boolean, nullable=True)
+    es_garantia = Column(Boolean, default=True)
+    costo_cero = Column(Boolean, default=True)
     diagnostico_resolucion = Column(Text, nullable=True)
     
     # Métricas y Auditoría (KPIs)
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_cierre = Column(DateTime(timezone=True), nullable=True)
-    calificacion_csat = Column(Integer, nullable=True)  # Escala 1 a 5[cite: 14]
-
-
+    calificacion_csat = Column(Integer, nullable=True)
 
