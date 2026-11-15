@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, Enum, Boolean,func
 from sqlalchemy.orm import relationship
-from database import Base
+from database import Base,engine
 from sqlalchemy.sql import func
 import enum
 from datetime import datetime
-
+Base.metadata.create_all(bind=engine)
 class RolEnum(str, enum.Enum):
     admin = "admin"
     cliente = "cliente"
