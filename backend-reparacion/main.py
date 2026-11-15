@@ -6,7 +6,6 @@ import cloudinary
 import models
 from database import engine,Base
 from routers import auth, usuarios, servicios, repuestos, incidentes
-Base.metadata.create_all(bind=engine)
 load_dotenv()  
 
 cloudinary.config(
