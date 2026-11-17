@@ -29,12 +29,8 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-   origins = [
-    "https://servitek.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:5173",
-]
-   allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
