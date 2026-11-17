@@ -29,7 +29,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["https://servitek.vercel.app", "http://localhost:5173"],  # <--- Corregido: pasamos la lista 'origins' en lugar de [*] que causa error de sintaxis
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

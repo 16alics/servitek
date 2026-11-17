@@ -176,15 +176,3 @@ class Incidente(Base):
     fecha_cierre = Column(DateTime(timezone=True), nullable=True)
     calificacion_csat = Column(Integer, nullable=True)
 
-class OrdenServicio(Base):
-    __tablename__ = "servicios"
-    __table_args__ = {'extend_existing': True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    codigo_servicio = Column(String, unique=True, index=True)
-    equipo_id = Column(Integer, ForeignKey("equipos.id"))
-    tecnico_id = Column(Integer, nullable=True)
-    descripcion_falla = Column(String)
-    estado = Column(String)
-    costo_estimado = Column(Float, nullable=True)
-    costo_final = Column(Float, nullable=True)
