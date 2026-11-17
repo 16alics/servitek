@@ -194,7 +194,7 @@ class DiagnosticoUpdateSchema(BaseModel):
     repuestos: Optional[List[RepuestoItemSchema]] = []
 
 class IncidenteCreate(BaseModel):
-    orden_id: int
+    servicio_id: int
     usuario_id: int
     descripcion: str
     canal_reporte: str = "Web"        # "Web" o "Presencial"[cite: 11]

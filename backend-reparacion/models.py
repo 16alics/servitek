@@ -150,29 +150,24 @@ class ServicioFoto(Base):
     
 class Incidente(Base):
     __tablename__ = "incidentes"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
-    orden_id = Column(Integer, nullable=False, index=True)   # Referencia lógica a la orden
-    usuario_id = Column(Integer, nullable=False, index=True)  # Referencia lógica al usuario
-    
-    # Detalles del reporte
+    servicio_id = Column(Integer, ForeignKey("servicios.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     descripcion = Column(Text, nullable=False)
-    canal_reporte = Column(String(20), default="Web")
-    
-    # Categorización y Priorización (Matriz SLA)
-    categoria = Column(String(50), default="Hardware")
-    prioridad = Column(String(10), default="P1")
-    sla_limite = Column(DateTime, nullable=True)
-    
-    # Flujo de Resolución y Garantía
-    estado = Column(String(30), default="Abierto")
-    solucion_remota = Column(Boolean, nullable=True)
-    es_garantia = Column(Boolean, default=True)
-    costo_cero = Column(Boolean, default=True)
-    diagnostico_resolucion = Column(Text, nullable=True)
-    
-    # Métricas y Auditoría (KPIs)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
-    fecha_cierre = Column(DateTime(timezone=True), nullable=True)
-    calificacion_csat = Column(Integer, nullable=True)
+    canal_reporte = Column(String(20))
+    categoria = Column(String(50))
+    prioridad = Column(String(10))
+    sla_limite = Column(DateTime)
+    estado = Column(String(30))
+    solucion_remota = Column(Boolean)
+    es_garantia = Column(Boolean)
+    costo_cero = Column(Boolean)
+    diagnostico_resolucion = Column(Text)
+    fecha_creacion = Column(DateTime)
+    fecha_cierre = Column(DateTime)
+    calificacion_csat = Column(Integer)
 
+    # Relación explícita con la tabla servicios
+    servicio = relationship("OrdenServicio", primaryjoin="Incidente.servicio_id == OrdenServicio.id", back_populates="incidentes")

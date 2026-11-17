@@ -34,47 +34,33 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # Buscamos en la tabla 'servicios' real mediante el id o codigo_servicio
-    orden = db.query(models.OrdenServicio).filter(
-        (models.OrdenServicio.id == datos.orden_id) | 
-        (models.OrdenServicio.codigo_servicio == str(datos.orden_id))
+    # Buscamos el servicio por ID o por codigo_servicio
+    servicio = db.query(models.OrdenServicio).filter(
+        (models.OrdenServicio.id == datos.servicio_id) | 
+        (models.OrdenServicio.codigo_servicio == str(datos.servicio_id))
     ).first()
 
-    if not orden:
+    if not servicio:
         raise HTTPException(
             status_code=404, 
-            detail=f"La orden con identificador '{datos.orden_id}' no existe en servicios."
+            detail=f"El servicio con identificador '{datos.servicio_id}' no existe."
         )
 
-    # Resto de tu lógica para crear el incidente y notificaciones...
-    horas_sla = SLA_HORAS.get(datos.prioridad, 1)
-    limite = datetime.now(timezone.utc) + timedelta(hours=horas_sla)
-
     nuevo_incidente = models.Incidente(
-        orden_id=orden.id, # Usamos el id real encontrado de la orden
+        servicio_id=servicio.id,  # Usamos el ID real de servicios
         usuario_id=datos.usuario_id,
         descripcion=datos.descripcion,
-        canal_reporte=datos.canal_reporte or "Web Cliente",
-        categoria=datos.categoria,
         prioridad=datos.prioridad,
-        sla_limite=limite,
-        estado="Abierto",
+        canal_reporte=datos.canal_reporte,
+        categoria=datos.categoria,
+        estado="Registrado",
         es_garantia=True,
         costo_cero=True
     )
+    
     db.add(nuevo_incidente)
     db.commit()
     db.refresh(nuevo_incidente)
-
-    codigo_ref = orden.codigo or str(orden.id)
-    notificacion = models.Notificacion(
-        usuario_id=datos.usuario_id,
-        rol_destino="tecnico",
-        mensaje=f"🚨 Incidente {datos.prioridad} registrado para Orden #{codigo_ref}: {datos.descripcion}"
-    )
-    db.add(notificacion)
-    db.commit()
-
     return nuevo_incidente
 @router.put("/{incidente_id}/evaluar", response_model=schemas.IncidenteResponse)
 def evaluar_incidente(incidente_id: int, decision: schemas.IncidenteResolver, db: Session = Depends(get_db)):
