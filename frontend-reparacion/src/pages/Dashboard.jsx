@@ -502,7 +502,7 @@ const handleReset = async (e) => {
                       <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-gray-200 shadow-sm">
                         <p className="text-gray-500 text-sm">No se encontraron equipos o servicios que coincidan con la búsqueda.</p>
                       </div>
-                    )}
+                    )
                   </div>
                 )}
               </div>
