@@ -11,12 +11,9 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   setEnviando(true);
 
-  // 1. Obtenemos el token y el ID del usuario de manera segura
   const token = localStorage.getItem("token") || localStorage.getItem("access_token");
-  
-  // Si guardas el objeto del usuario o su ID en localStorage al iniciar sesión:
   const usuarioGuardado = JSON.parse(localStorage.getItem("usuario") || "{}");
-  const usuarioId = usuarioGuardado.id || 26; // Usamos un respaldo por seguridad
+  const usuarioId = usuarioGuardado.id || 26;
 
   if (!token) {
     alert("No se encontró una sesión activa. Por favor, vuelve a iniciar sesión.");
@@ -25,15 +22,16 @@ const handleSubmit = async (e) => {
   }
 
   try {
-    const response = await fetch("https://servitek.onrender.com/incidentes/", {
+    // ¡Asegúrate de incluir /api/ aquí!
+    const response = await fetch("https://servitek.onrender.com/api/incidentes/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({
-        orden_id: orden.id, // Tu base de datos lo mapeará con servicio_id automáticamente
-        usuario_id: usuarioId, // ID del usuario actual de forma segura
+        orden_id: orden.id, // Mapeado automáticamente a servicio_id en el backend
+        usuario_id: usuarioId,
         descripcion: descripcion,
         categoria: categoria,
         canal_reporte: "Web",
