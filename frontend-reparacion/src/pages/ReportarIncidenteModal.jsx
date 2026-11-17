@@ -8,62 +8,41 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
   const [enviando, setEnviando] = useState(false);
 
 const handleSubmit = async (e) => {
-    e.preventDefault();
-    setEnviando(true);
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      
-      // 🔑 Buscamos el token en las claves comunes
-      let rawToken = localStorage.getItem('token') || 
-                     localStorage.getItem('access_token') || 
-                     localStorage.getItem('access-token');
+  e.preventDefault();
+  setEnviando(true);
 
-      // Si el token se guardó como un objeto JSON stringificado, lo extraemos con seguridad
-      let token = rawToken;
-      if (rawToken && (rawToken.startsWith('{') || rawToken.startsWith('"'))) {
-        try {
-          const parsed = JSON.parse(rawToken);
-          token = parsed.access_token || parsed.token || parsed.access-token || rawToken;
-        } catch (err) {
-          // Si no es JSON válido, se queda como está
-        }
-      }
+  try {
+    const response = await fetch("https://servitek.onrender.com/incidentes/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Incluye tu token de autorización si lo requiere
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        servicio_id: orden.id, // <--- Aquí enviamos el ID real de la tabla servicios
+        usuario_id: usuarioActual.id,
+        descripcion: descripcion,
+        categoria: categoria,
+        canal_reporte: "Web",
+        prioridad: "P1"
+      })
+    });
 
-      // Limpiamos comillas extra si las hubiera
-      if (token) {
-        token = token.replace(/^["'](.+)["']$/, '$1');
-      }
-
-      const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
-
-      if (!token) {
-        alert('No se encontró una sesión activa válida. Por favor, vuelve a iniciar sesión.');
-        return;
-      }
-
-      await axios.post(`${API_URL}/api/incidentes/`, {
-        orden_id: orden.id,
-        usuario_id: usuarioStorage.id || usuarioStorage.usuario_id,
-        descripcion,
-        canal_reporte: 'Web',
-        categoria,
-        prioridad: 'P1'
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      alert('Incidente registrado. Nuestro soporte técnico revisará tu caso de inmediato.');
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error('Error al registrar incidente:', error.response?.data || error);
-      alert(`No se pudo registrar el incidente: ${error.response?.data?.detail || 'Verifica tu sesión.'}`);
-    } finally {
-      setEnviando(false);
+    if (!response.ok) {
+      throw new Error("No se pudo registrar el incidente");
     }
-  };
+
+    const data = await response.json();
+    alert("¡Incidente registrado con éxito!");
+    onClose();
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo registrar el incidente: " + error.message);
+  } finally {
+    setEnviando(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">

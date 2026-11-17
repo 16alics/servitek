@@ -34,20 +34,28 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # Validar que el servicio exista en la tabla 'servicios' usando servicio_id o codigo_servicio
+    # Determinamos el ID del servicio a buscar
+    id_objetivo = datos.servicio_id
+
+    if not id_objetivo:
+        raise HTTPException(
+            status_code=422, 
+            detail="Falta el identificador del servicio (servicio_id u orden_id)."
+        )
+
+    # Buscamos el servicio en la tabla 'servicios' usando su id primario
     servicio = db.query(models.OrdenServicio).filter(
-        (models.OrdenServicio.id == datos.servicio_id) | 
-        (models.OrdenServicio.codigo_servicio == str(datos.servicio_id))
+        models.OrdenServicio.id == id_objetivo
     ).first()
 
     if not servicio:
         raise HTTPException(
             status_code=404, 
-            detail=f"El servicio con identificador '{datos.servicio_id}' no existe."
+            detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos."
         )
 
     nuevo_incidente = models.Incidente(
-        servicio_id=servicio.id,  # Vinculado a la tabla servicios
+        servicio_id=servicio.id,  # Se vincula con el id de la tabla servicios
         usuario_id=datos.usuario_id,
         descripcion=datos.descripcion,
         canal_reporte=datos.canal_reporte,
@@ -62,7 +70,6 @@ def registrar_incidente(
     db.commit()
     db.refresh(nuevo_incidente)
     return nuevo_incidente
-
 
 @router.get("/", response_model=list[schemas.IncidenteResponse])
 def listar_incidentes(db: Session = Depends(get_db)):

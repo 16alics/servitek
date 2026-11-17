@@ -193,12 +193,16 @@ class DiagnosticoUpdateSchema(BaseModel):
     costo_estimado: Optional[float] = None
     repuestos: Optional[List[RepuestoItemSchema]] = []
 class IncidenteCreate(BaseModel):
-    servicio_id: int
+    servicio_id: Optional[int] = Field(None, alias="orden_id")
     usuario_id: int
     descripcion: str
     canal_reporte: Optional[str] = "Web"
     categoria: Optional[str] = "Hardware"
     prioridad: Optional[str] = "P1"
+
+    class Config:
+        populate_by_name = True
+        
 class IncidenteCSAT(BaseModel):
     calificacion_csat: int
 class IncidenteResponse(BaseModel):
