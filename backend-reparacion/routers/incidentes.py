@@ -34,7 +34,7 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # Buscamos el servicio por ID o por codigo_servicio
+    # Validar que el servicio exista en la tabla 'servicios' usando servicio_id o codigo_servicio
     servicio = db.query(models.OrdenServicio).filter(
         (models.OrdenServicio.id == datos.servicio_id) | 
         (models.OrdenServicio.codigo_servicio == str(datos.servicio_id))
@@ -47,12 +47,12 @@ def registrar_incidente(
         )
 
     nuevo_incidente = models.Incidente(
-        servicio_id=servicio.id,  # Usamos el ID real de servicios
+        servicio_id=servicio.id,  # Vinculado a la tabla servicios
         usuario_id=datos.usuario_id,
         descripcion=datos.descripcion,
-        prioridad=datos.prioridad,
         canal_reporte=datos.canal_reporte,
         categoria=datos.categoria,
+        prioridad=datos.prioridad,
         estado="Registrado",
         es_garantia=True,
         costo_cero=True
@@ -62,6 +62,12 @@ def registrar_incidente(
     db.commit()
     db.refresh(nuevo_incidente)
     return nuevo_incidente
+
+
+@router.get("/", response_model=list[schemas.IncidenteResponse])
+def listar_incidentes(db: Session = Depends(get_db)):
+    return db.query(models.Incidente).all()
+
 @router.put("/{incidente_id}/evaluar", response_model=schemas.IncidenteResponse)
 def evaluar_incidente(incidente_id: int, decision: schemas.IncidenteResolver, db: Session = Depends(get_db)):
     incidente = db.query(models.Incidente).filter(models.Incidente.id == incidente_id).first()
