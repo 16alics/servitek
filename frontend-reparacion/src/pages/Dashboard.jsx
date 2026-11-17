@@ -415,82 +415,83 @@ const handleReset = async (e) => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {serviciosFiltrados.length > 0 ? (
-                      serviciosFiltrados.map(s => (
-                        <div 
-                        key={s.id} 
-  onClick={async (e) => {
-    // 🛡️ Si el clic provino de un botón (como Garantía o Anular), ignoramos el evento de la tarjeta
-    if (e.target.closest('button')) return;
+                     {serviciosFiltrados.map(s => (
+  <div 
+    key={s.id} 
+    className="border border-gray-200 rounded-2xl p-5 shadow-sm relative overflow-hidden bg-white hover:shadow-md transition group"
+  >
+    <div className="absolute top-0 left-0 w-1.5 bottom-0 bg-blue-600 group-hover:bg-blue-700 transition"></div>
+    <div className="flex justify-between items-start mb-3">
+      <div>
+        {/* Hacemos que el código sea el enlace interactivo para ver los detalles */}
+        <span 
+          onClick={async () => {
+            setSelectedServicioModal(s);
+            try {
+              const resFotos = await axios.get(`${API_URL}/api/servicios/${s.id}/fotos`);
+              setListaFotos(resFotos.data);
+            } catch (error) {
+              setListaFotos([]);
+            }
+          }}
+          className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline block mb-1 font-mono cursor-pointer flex items-center gap-1"
+        >
+          {s.codigo} 🔍 (Ver Detalles)
+        </span>
+        <span className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold">{s.estado}</span>
+      </div>
+      <div 
+        className="bg-gray-50 p-1.5 rounded-xl cursor-pointer hover:bg-gray-100 transition border border-gray-200" 
+        title="Ampliar Código QR"
+        onClick={(e) => {
+          e.stopPropagation();
+          setQrModalCode(s.codigo);
+        }}
+      >
+        <QRCode value={s.codigo} size={40} />
+      </div>
+    </div>
+    
+    <h4 className="font-bold text-gray-900 text-lg mb-1.5 mt-2">
+      {typeof s.equipo === 'object' ? `${s.equipo?.marca || ''} ${s.equipo?.modelo || ''}` : s.equipo}
+    </h4>
+    
+    <p className="text-sm text-gray-600 line-clamp-2">Falla: {s.descripcion_falla}</p>
+    
+    {s.estado === 'Pendiente' && (
+      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCancelTicket(s.id);
+          }}
+          className="text-red-600 text-xs font-bold hover:text-red-800 transition cursor-pointer flex items-center gap-1"
+        >
+          Anular Ticket
+        </button>
+      </div>
+    )}
 
-    setSelectedServicioModal(s);
-    try {
-      const resFotos = await axios.get(`${API_URL}/api/servicios/${s.id}/fotos`);
-      setListaFotos(resFotos.data);
-    } catch (error) {
-      setListaFotos([]);
-    }
-  }}
-                          className="border border-gray-200 rounded-2xl p-5 shadow-sm relative overflow-hidden bg-white hover:shadow-md transition cursor-pointer group"
-                        >
-                          <div className="absolute top-0 left-0 w-1.5 bottom-0 bg-blue-600 group-hover:bg-blue-700 transition"></div>
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <span className="text-xs font-bold text-gray-500 block mb-1 font-mono">{s.codigo}</span>
-                              <span className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold">{s.estado}</span>
-                            </div>
-                            <div 
-                              className="bg-gray-50 p-1.5 rounded-xl cursor-pointer hover:bg-gray-100 transition border border-gray-200" 
-                              title="Ampliar Código QR"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setQrModalCode(s.codigo);
-                              }}
-                            >
-                              <QRCode value={s.codigo} size={40} />
-                            </div>
-                          </div>
-                          
-                          <h4 className="font-bold text-gray-900 text-lg mb-1.5 mt-2">
-                            {typeof s.equipo === 'object' ? `${s.equipo?.marca || ''} ${s.equipo?.modelo || ''}` : s.equipo}
-                          </h4>
-                          
-                          <p className="text-sm text-gray-600 line-clamp-2">Falla: {s.descripcion_falla}</p>
-                          
-                          {s.estado === 'Pendiente' && (
-                            <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelTicket(s.id);
-                                }}
-                                className="text-red-600 text-xs font-bold hover:text-red-800 transition cursor-pointer flex items-center gap-1"
-                              >
-                                Anular Ticket
-                              </button>
-                            </div>
-                          )}
-                        {/* 2. NUEVO: Botón para Reportar Incidente o Garantía si ya fue Entregado */}
-{s.estado === 'Entregado' && (
-  <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-    <button 
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        e.nativeEvent.stopImmediatePropagation();
-        setSelectedOrdenParaIncidente(s);
-        setMostrarModalIncidente(true);
-      }}
-      className="text-amber-600 text-xs font-bold hover:text-amber-800 transition cursor-pointer flex items-center gap-1 relative z-10"
-    >
-      ⚠️ Reportar Garantía / Falla
-    </button>
+    {s.estado === 'Entregado' && (
+      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+        <button 
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setSelectedOrdenParaIncidente(s);
+            setMostrarModalIncidente(true);
+          }}
+          className="text-amber-600 text-xs font-bold hover:text-amber-800 transition cursor-pointer flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100"
+        >
+          ⚠️ Reportar Garantía / Falla
+        </button>
+      </div>
+    )}
   </div>
-)}
-
-
-                        </div>
-                      ))
+))}
+                      
                     ) : (
                       <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-gray-200 shadow-sm">
                         <p className="text-gray-500 text-sm">No se encontraron equipos o servicios que coincidan con la búsqueda.</p>
