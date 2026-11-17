@@ -7,15 +7,23 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
   const [categoria, setCategoria] = useState('Hardware');
   const [enviando, setEnviando] = useState(false);
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setEnviando(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || '';
       
-      // 🔑 Obtenemos el token guardado al iniciar sesión
-      const token = localStorage.getItem('token');
+      // 🔑 Buscamos el token probando las claves más comunes del proyecto
+      const token = localStorage.getItem('token') || 
+                    localStorage.getItem('access_token') || 
+                    localStorage.getItem('access-token');
+
       const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+      if (!token) {
+        alert('No se encontró una sesión activa. Por favor, vuelve a iniciar sesión.');
+        return;
+      }
 
       await axios.post(`${API_URL}/api/incidentes/`, {
         orden_id: orden.id,
@@ -23,10 +31,10 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
         descripcion,
         canal_reporte: 'Web',
         categoria,
-        prioridad: 'P1' // Garantía crítica (< 1 hora SLA)
+        prioridad: 'P1'
       }, {
         headers: {
-          Authorization: `Bearer ${token}` // 👈 Adjuntamos el token aquí para evitar el 401
+          Authorization: `Bearer ${token}`
         }
       });
 
@@ -34,8 +42,8 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Error al registrar incidente:', error);
-      alert('No se pudo registrar el incidente. Verifica tu sesión.');
+      console.error('Error al registrar incidente:', error.response?.data || error);
+      alert(`No se pudo registrar el incidente: ${error.response?.data?.detail || 'Verifica tu sesión.'}`);
     } finally {
       setEnviando(false);
     }
