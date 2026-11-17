@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 import models, schemas
 from database import get_db
-from routers.incidentes import get_current_user
+from routers.auth import get_current_user
 router = APIRouter(prefix="/api/incidentes", tags=["Gestión de Incidentes y Garantías"])
 
 # Mapeo de tiempos SLA según la matriz de priorización[cite: 12]
