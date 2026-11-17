@@ -12,6 +12,9 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
     setEnviando(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || '';
+      
+      // 🔑 Obtenemos el token guardado al iniciar sesión
+      const token = localStorage.getItem('token');
       const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
 
       await axios.post(`${API_URL}/api/incidentes/`, {
@@ -21,6 +24,10 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
         canal_reporte: 'Web',
         categoria,
         prioridad: 'P1' // Garantía crítica (< 1 hora SLA)
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}` // 👈 Adjuntamos el token aquí para evitar el 401
+        }
       });
 
       alert('Incidente registrado. Nuestro soporte técnico revisará tu caso de inmediato.');
@@ -28,7 +35,7 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
       onClose();
     } catch (error) {
       console.error('Error al registrar incidente:', error);
-      alert('No se pudo registrar el incidente.');
+      alert('No se pudo registrar el incidente. Verifica tu sesión.');
     } finally {
       setEnviando(false);
     }
@@ -42,14 +49,15 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
             <AlertTriangle className="w-5 h-5" />
             <h3>Reportar Incidente / Garantía</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button onClick={onClose} className="text-slate-400 hover:text-white cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="bg-emerald-950/50 border border-emerald-700/40 rounded-xl p-3 mb-4 flex items-center gap-2.5 text-xs text-emerald-300">
           <ShieldCheck className="w-5 h-5 shrink-0 text-emerald-400" />
-          <span>Orden <strong>{orden.codigo_orden}</strong> cubierta por garantía sin costo (Prioridad P1 - Atención &lt; 1h).</span>
+          {/* Usamos orden.codigo para que coincida con el backend */}
+          <span>Orden <strong>{orden.codigo || orden.codigo_orden}</strong> cubierta por garantía sin costo (Prioridad P1 - Atención &lt; 1h).</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -79,13 +87,13 @@ export default function ReportarIncidenteModal({ orden, onClose, onSuccess }) {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer">
               Cancelar
             </button>
             <button
               type="submit"
               disabled={enviando}
-              className="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl text-white"
+              className="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl text-white cursor-pointer"
             >
               {enviando ? 'Registrando...' : 'Enviar Reporte'}
             </button>
