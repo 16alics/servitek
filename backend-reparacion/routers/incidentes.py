@@ -34,53 +34,42 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    try:
-        # Soportar tanto servicio_id como orden_id por seguridad
-        id_objetivo = datos.servicio_id or getattr(datos, "orden_id", None)
+    # Tomamos el ID del campo que venga lleno (servicio_id u orden_id)
+    id_objetivo = datos.servicio_id or datos.orden_id
 
-        if not id_objetivo:
-            raise HTTPException(
-                status_code=422, 
-                detail="Falta el identificador del servicio u orden."
-            )
-
-        # Buscamos en la tabla 'servicios'
-        servicio = db.query(models.OrdenServicio).filter(
-            models.OrdenServicio.id == id_objetivo
-        ).first()
-
-        if not servicio:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos."
-            )
-
-        nuevo_incidente = models.Incidente(
-            servicio_id=servicio.id,
-            usuario_id=datos.usuario_id,
-            descripcion=datos.descripcion,
-            canal_reporte=datos.canal_reporte or "Web",
-            categoria=datos.categoria,
-            prioridad=datos.prioridad,
-            estado="Registrado",
-            es_garantia=True,
-            costo_cero=True
-        )
-        
-        db.add(nuevo_incidente)
-        db.commit()
-        db.refresh(nuevo_incidente)
-        return nuevo_incidente
-
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        db.rollback()
-        print(f"ERROR INTERNO AL REGISTRAR INCIDENTE: {str(e)}")
+    if not id_objetivo:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            status_code=422, 
+            detail="Falta el identificador del servicio u orden."
         )
+
+    # Verificamos que el servicio exista en la base de datos
+    servicio = db.query(models.OrdenServicio).filter(
+        models.OrdenServicio.id == id_objetivo
+    ).first()
+
+    if not servicio:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos."
+        )
+
+    nuevo_incidente = models.Incidente(
+        servicio_id=servicio.id,
+        usuario_id=datos.usuario_id,
+        descripcion=datos.descripcion,
+        canal_reporte=datos.canal_reporte or "Web",
+        categoria=datos.categoria or "Hardware",
+        prioridad=datos.prioridad or "P1",
+        estado="Registrado",
+        es_garantia=True,
+        costo_cero=True
+    )
+    
+    db.add(nuevo_incidente)
+    db.commit()
+    db.refresh(nuevo_incidente)
+    return nuevo_incidente
 
 @router.get("/", response_model=list[schemas.IncidenteResponse])
 def listar_incidentes(db: Session = Depends(get_db)):
