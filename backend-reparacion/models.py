@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, Enum, Boolean,func
 from sqlalchemy.orm import relationship
-from database import Base
+from database import Base,engine
 from sqlalchemy.sql import func
 import enum
+import models
 from datetime import datetime
 class RolEnum(str, enum.Enum):
     admin = "admin"
@@ -175,3 +176,13 @@ class Incidente(Base):
     fecha_cierre = Column(DateTime(timezone=True), nullable=True)
     calificacion_csat = Column(Integer, nullable=True)
 
+class OrdenServicio(Base):
+    __tablename__ = "ordenes_servicio"
+
+    id = Column(Integer, primary_key=True, index=True)
+    codigo = Column(String, unique=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("usuarios.id"))
+    
+    # Usamos strings en las relaciones para evitar errores de importación circular al iniciar
+    cliente = relationship("Usuario", foreign_keys=[cliente_id])
+    incidentes = relationship("Incidente", back_populates="orden")
