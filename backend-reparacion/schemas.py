@@ -212,7 +212,7 @@ class IncidenteCSAT(BaseModel):
 
 class IncidenteResponse(BaseModel):
     id: int
-    orden_id: int
+    servicio_id: int
     usuario_id: int
     descripcion: str
     canal_reporte: str
