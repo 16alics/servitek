@@ -175,13 +175,3 @@ class Incidente(Base):
     fecha_cierre = Column(DateTime(timezone=True), nullable=True)
     calificacion_csat = Column(Integer, nullable=True)
 
-class OrdenServicio(Base):
-    __tablename__ = "ordenes_servicio"  # O el nombre de tu tabla en la BD
-
-    id = Column(Integer, primary_key=True, index=True)
-    codigo = Column(String, unique=True, index=True) # O codigo_orden
-    cliente_id = Column(Integer, ForeignKey("usuarios.id"))
-    
-    # Relaciones (opcional según tu estructura)
-    cliente = relationship("Usuario", foreign_keys=[cliente_id])
-    incidentes = relationship("Incidente", back_populates="orden")
