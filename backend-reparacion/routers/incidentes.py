@@ -34,16 +34,12 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # Determinamos el ID del servicio a buscar
+    # Si viene por alias o campo directo
     id_objetivo = datos.servicio_id
 
     if not id_objetivo:
-        raise HTTPException(
-            status_code=422, 
-            detail="Falta el identificador del servicio (servicio_id u orden_id)."
-        )
+        raise HTTPException(status_code=422, detail="Falta el identificador del servicio u orden.")
 
-    # Buscamos el servicio en la tabla 'servicios' usando su id primario
     servicio = db.query(models.OrdenServicio).filter(
         models.OrdenServicio.id == id_objetivo
     ).first()
@@ -55,10 +51,10 @@ def registrar_incidente(
         )
 
     nuevo_incidente = models.Incidente(
-        servicio_id=servicio.id,  # Se vincula con el id de la tabla servicios
+        servicio_id=servicio.id,
         usuario_id=datos.usuario_id,
         descripcion=datos.descripcion,
-        canal_reporte=datos.canal_reporte,
+        canal_reporte=datos.canal_reporte or "Web",
         categoria=datos.categoria,
         prioridad=datos.prioridad,
         estado="Registrado",

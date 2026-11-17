@@ -202,6 +202,7 @@ class IncidenteCreate(BaseModel):
 
     class Config:
         populate_by_name = True
+        extra = "ignore" # Ignora campos duplicados o sobrantes como el extra canal_reporte
         
 class IncidenteCSAT(BaseModel):
     calificacion_csat: int
