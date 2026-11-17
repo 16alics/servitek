@@ -182,4 +182,9 @@ class OrdenServicio(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     codigo_servicio = Column(String, unique=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("usuarios.id"))
+    equipo_id = Column(Integer, ForeignKey("equipos.id"))
+    tecnico_id = Column(Integer, nullable=True)
+    descripcion_falla = Column(String)
+    estado = Column(String)
+    costo_estimado = Column(Float, nullable=True)
+    costo_final = Column(Float, nullable=True)

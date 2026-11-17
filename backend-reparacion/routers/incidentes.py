@@ -34,16 +34,16 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # Buscamos exactamente en la tabla 'ordenes_servicio' usando id o codigo (ej. OT-0121)
+    # Buscamos en la tabla 'servicios' real mediante el id o codigo_servicio
     orden = db.query(models.OrdenServicio).filter(
         (models.OrdenServicio.id == datos.orden_id) | 
-        (models.OrdenServicio.codigo == str(datos.orden_id))
+        (models.OrdenServicio.codigo_servicio == str(datos.orden_id))
     ).first()
 
     if not orden:
         raise HTTPException(
             status_code=404, 
-            detail=f"La orden de servicio {datos.orden_id} no existe en el sistema"
+            detail=f"La orden con identificador '{datos.orden_id}' no existe en servicios."
         )
 
     # Resto de tu lógica para crear el incidente y notificaciones...
