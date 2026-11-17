@@ -192,4 +192,26 @@ class DiagnosticoUpdateSchema(BaseModel):
     actividades_realizadas: Optional[str] = None
     costo_estimado: Optional[float] = None
     repuestos: Optional[List[RepuestoItemSchema]] = []
+class IncidenteCreate(BaseModel):
+    servicio_id: int
+    usuario_id: int
+    descripcion: str
+    canal_reporte: Optional[str] = "Web"
+    categoria: Optional[str] = "Hardware"
+    prioridad: Optional[str] = "P1"
 
+class IncidenteResponse(BaseModel):
+    id: int
+    servicio_id: int
+    usuario_id: int
+    descripcion: str
+    canal_reporte: Optional[str] = None
+    categoria: Optional[str] = None
+    prioridad: Optional[str] = None
+    estado: Optional[str] = None
+    es_garantia: Optional[bool] = None
+    costo_cero: Optional[bool] = None
+    fecha_creacion: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True  # Para que lea modelos de SQLAlchemy correctamente (Pydantic V2)
