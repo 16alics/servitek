@@ -199,7 +199,8 @@ class IncidenteCreate(BaseModel):
     canal_reporte: Optional[str] = "Web"
     categoria: Optional[str] = "Hardware"
     prioridad: Optional[str] = "P1"
-
+class IncidenteCSAT(BaseModel):
+    calificacion_csat: int
 class IncidenteResponse(BaseModel):
     id: int
     servicio_id: int
