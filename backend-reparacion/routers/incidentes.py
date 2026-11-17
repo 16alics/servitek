@@ -31,7 +31,12 @@ def obtener_equipos_por_dni(dni: str, db: Session = Depends(get_db)):
 
 # 2. Registrar Incidente (Cliente desde Panel Web o Recepcionista Presencial)[cite: 11, 12]
 @router.post("/", response_model=schemas.IncidenteResponse)
-def registrar_incidente(datos: schemas.IncidenteCreate, db: Session = Depends(get_db)):
+def registrar_incidente(
+    datos: schemas.IncidenteCreate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user) # 👈 Obtenemos el usuario autenticado de forma segura
+):
+    # 1. Validar que la orden exista y pertenezca al cliente (o sea válida)
     orden = db.query(models.OrdenServicio).filter(models.OrdenServicio.id == datos.orden_id).first()
     if not orden:
         raise HTTPException(status_code=404, detail="La orden de servicio vinculada no existe")
@@ -39,11 +44,12 @@ def registrar_incidente(datos: schemas.IncidenteCreate, db: Session = Depends(ge
     horas_sla = SLA_HORAS.get(datos.prioridad, 1)
     limite = datetime.now(timezone.utc) + timedelta(hours=horas_sla)
 
+    # 2. Crear el incidente usando el ID del usuario autenticado
     nuevo_incidente = models.Incidente(
         orden_id=datos.orden_id,
-        usuario_id=datos.usuario_id,
+        usuario_id=current_user.id, # 👈 Usamos el ID del token actual
         descripcion=datos.descripcion,
-        canal_reporte=datos.canal_reporte,
+        canal_reporte=datos.canal_reporte or "Web Cliente",
         categoria=datos.categoria,
         prioridad=datos.prioridad,
         sla_limite=limite,
@@ -55,17 +61,16 @@ def registrar_incidente(datos: schemas.IncidenteCreate, db: Session = Depends(ge
     db.commit()
     db.refresh(nuevo_incidente)
 
-    # Generar alerta interna para Soporte Técnico / Taller[cite: 12]
+    # 3. Generar la notificación interna (usando orden.codigo en lugar de orden.codigo_orden)
     notificacion = models.Notificacion(
-        usuario_id=datos.usuario_id,
+        usuario_id=current_user.id,
         rol_destino="tecnico",
-        mensaje=f"🚨 Incidente {datos.prioridad} registrado para Orden #{orden.codigo_orden}: {datos.descripcion}"
+        mensaje=f"🚨 Incidente {datos.prioridad} registrado para Orden #{orden.codigo}: {datos.descripcion}"
     )
     db.add(notificacion)
     db.commit()
 
     return nuevo_incidente
-
 # 3. Evaluación Técnica: ¿Solución Remota Posible? (Sí -> FCR | No -> Ticket Garantía Taller)[cite: 11, 12]
 @router.put("/{incidente_id}/evaluar", response_model=schemas.IncidenteResponse)
 def evaluar_incidente(incidente_id: int, decision: schemas.IncidenteResolver, db: Session = Depends(get_db)):
