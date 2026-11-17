@@ -215,3 +215,9 @@ class IncidenteResponse(BaseModel):
 
     class Config:
         from_attributes = True  # Para que lea modelos de SQLAlchemy correctamente (Pydantic V2)
+
+class IncidenteResolver(BaseModel):
+    estado: Optional[str] = "Resuelto"
+    diagnostico_resolucion: Optional[str] = None
+    solucion_remota: Optional[bool] = False
+    costo_cero: Optional[bool] = True
