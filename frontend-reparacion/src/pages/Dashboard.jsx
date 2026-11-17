@@ -415,7 +415,7 @@ const handleReset = async (e) => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {serviciosFiltrados.length > 0 ? (
-                     {serviciosFiltrados.map(s => (
+                      {serviciosFiltrados.map(s => (
   <div 
     key={s.id} 
     className="border border-gray-200 rounded-2xl p-5 shadow-sm relative overflow-hidden bg-white hover:shadow-md transition group"
@@ -491,7 +491,6 @@ const handleReset = async (e) => {
     )}
   </div>
 ))}
-                      
                     ) : (
                       <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-gray-200 shadow-sm">
                         <p className="text-gray-500 text-sm">No se encontraron equipos o servicios que coincidan con la búsqueda.</p>
