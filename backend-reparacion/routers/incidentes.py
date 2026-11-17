@@ -34,15 +34,24 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    orden = db.query(models.OrdenServicio).filter(models.OrdenServicio.id == datos.orden_id).first()
-    if not orden:
-        raise HTTPException(status_code=404, detail="La orden de servicio vinculada no existe")
+    # Buscamos exactamente en la tabla 'ordenes_servicio' usando id o codigo (ej. OT-0121)
+    orden = db.query(models.OrdenServicio).filter(
+        (models.OrdenServicio.id == datos.orden_id) | 
+        (models.OrdenServicio.codigo == str(datos.orden_id))
+    ).first()
 
+    if not orden:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"La orden de servicio {datos.orden_id} no existe en el sistema"
+        )
+
+    # Resto de tu lógica para crear el incidente y notificaciones...
     horas_sla = SLA_HORAS.get(datos.prioridad, 1)
     limite = datetime.now(timezone.utc) + timedelta(hours=horas_sla)
 
     nuevo_incidente = models.Incidente(
-        orden_id=datos.orden_id,
+        orden_id=orden.id, # Usamos el id real encontrado de la orden
         usuario_id=datos.usuario_id,
         descripcion=datos.descripcion,
         canal_reporte=datos.canal_reporte or "Web Cliente",
@@ -57,7 +66,7 @@ def registrar_incidente(
     db.commit()
     db.refresh(nuevo_incidente)
 
-    codigo_ref = getattr(orden, "codigo", None) or getattr(orden, "codigo_orden", str(orden.id))
+    codigo_ref = orden.codigo or str(orden.id)
     notificacion = models.Notificacion(
         usuario_id=datos.usuario_id,
         rol_destino="tecnico",
