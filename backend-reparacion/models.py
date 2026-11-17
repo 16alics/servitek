@@ -148,3 +148,17 @@ class ServicioFoto(Base):
     url_foto = Column(Text, nullable=False)
     fecha_subida = Column(DateTime, server_default=func.now())
     
+# Verifica que tu modelo en models.py tenga estos campos exactos:
+class Incidente(Base):
+    __tablename__ = "incidentes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    servicio_id = Column(Integer, ForeignKey("servicios.id"), nullable=False)
+    usuario_id = Column(Integer, nullable=False)
+    descripcion = Column(Text, nullable=False)
+    categoria = Column(String, nullable=True)
+    prioridad = Column(String, nullable=True)
+    canal_reporte = Column(String, nullable=True)
+    estado = Column(String, default="Registrado")
+    es_garantia = Column(Boolean, default=True)
+    costo_cero = Column(Boolean, default=True)
