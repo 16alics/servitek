@@ -182,7 +182,3 @@ class OrdenServicio(Base):
     id = Column(Integer, primary_key=True, index=True)
     codigo = Column(String, unique=True, index=True)
     cliente_id = Column(Integer, ForeignKey("usuarios.id"))
-    
-    # Usamos strings en las relaciones para evitar errores de importación circular al iniciar
-    cliente = relationship("Usuario", foreign_keys=[cliente_id])
-    incidentes = relationship("Incidente", back_populates="orden")
