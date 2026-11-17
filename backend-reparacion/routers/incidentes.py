@@ -42,10 +42,10 @@ def registrar_incidente(
     horas_sla = SLA_HORAS.get(datos.prioridad, 1)
     limite = datetime.now(timezone.utc) + timedelta(hours=horas_sla)
 
-    # 2. Crear el incidente usando el usuario_id que manda el frontend de manera segura
+    # 2. Crear el incidente usando directamente el usuario_id del payload
     nuevo_incidente = models.Incidente(
         orden_id=datos.orden_id,
-        usuario_id=datos.usuario_id, # 👈 Usamos el ID del usuario recibido en el payload
+        usuario_id=datos.usuario_id,
         descripcion=datos.descripcion,
         canal_reporte=datos.canal_reporte or "Web Cliente",
         categoria=datos.categoria,
@@ -59,7 +59,7 @@ def registrar_incidente(
     db.commit()
     db.refresh(nuevo_incidente)
 
-    # 3. Generar la notificación interna para soporte/técnicos
+    # 3. Generar la notificación interna
     codigo_ref = getattr(orden, "codigo", None) or getattr(orden, "codigo_orden", str(orden.id))
     notificacion = models.Notificacion(
         usuario_id=datos.usuario_id,
@@ -70,7 +70,6 @@ def registrar_incidente(
     db.commit()
 
     return nuevo_incidente
-# 3. Evaluación Técnica: ¿Solución Remota Posible? (Sí -> FCR | No -> Ticket Garantía Taller)[cite: 11, 12]
 @router.put("/{incidente_id}/evaluar", response_model=schemas.IncidenteResponse)
 def evaluar_incidente(incidente_id: int, decision: schemas.IncidenteResolver, db: Session = Depends(get_db)):
     incidente = db.query(models.Incidente).filter(models.Incidente.id == incidente_id).first()
