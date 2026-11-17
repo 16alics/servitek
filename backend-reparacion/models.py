@@ -177,8 +177,8 @@ class Incidente(Base):
     calificacion_csat = Column(Integer, nullable=True)
 
 class OrdenServicio(Base):
-    __tablename__ = "ordenes_servicio"
+    __tablename__ = "servicios"
 
     id = Column(Integer, primary_key=True, index=True)
-    codigo = Column(String, unique=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("usuarios.id"))
+    codigo_servicio = Column(String, unique=True, index=True)
+    cliente_id = Column(Integer, ForeignKey("usuarios.id")) # O la columna que relacione al cliente/equipo
