@@ -11,16 +11,18 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   setEnviando(true);
 
+  // Define o recupera el token aquí mismo dentro de la función
+  const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+
   try {
     const response = await fetch("https://servitek.onrender.com/incidentes/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Incluye tu token de autorización si lo requiere
-        "Authorization": `Bearer ${token}` 
+        "Authorization": `Bearer ${token}` // Aquí ya estará disponible
       },
       body: JSON.stringify({
-        servicio_id: orden.id, // <--- Aquí enviamos el ID real de la tabla servicios
+        orden_id: orden.id,
         usuario_id: usuarioActual.id,
         descripcion: descripcion,
         categoria: categoria,
@@ -30,10 +32,10 @@ const handleSubmit = async (e) => {
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo registrar el incidente");
+      const errData = await response.json();
+      throw new Error(errData.detail || "Error al registrar el incidente");
     }
 
-    const data = await response.json();
     alert("¡Incidente registrado con éxito!");
     onClose();
   } catch (error) {
@@ -43,7 +45,6 @@ const handleSubmit = async (e) => {
     setEnviando(false);
   }
 };
-
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-slate-100 shadow-2xl">
