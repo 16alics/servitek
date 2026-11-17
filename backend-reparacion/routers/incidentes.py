@@ -34,38 +34,53 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # Si viene por alias o campo directo
-    id_objetivo = datos.servicio_id
+    try:
+        # Soportar tanto servicio_id como orden_id por seguridad
+        id_objetivo = datos.servicio_id or getattr(datos, "orden_id", None)
 
-    if not id_objetivo:
-        raise HTTPException(status_code=422, detail="Falta el identificador del servicio u orden.")
+        if not id_objetivo:
+            raise HTTPException(
+                status_code=422, 
+                detail="Falta el identificador del servicio u orden."
+            )
 
-    servicio = db.query(models.OrdenServicio).filter(
-        models.OrdenServicio.id == id_objetivo
-    ).first()
+        # Buscamos en la tabla 'servicios'
+        servicio = db.query(models.OrdenServicio).filter(
+            models.OrdenServicio.id == id_objetivo
+        ).first()
 
-    if not servicio:
-        raise HTTPException(
-            status_code=404, 
-            detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos."
+        if not servicio:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos."
+            )
+
+        nuevo_incidente = models.Incidente(
+            servicio_id=servicio.id,
+            usuario_id=datos.usuario_id,
+            descripcion=datos.descripcion,
+            canal_reporte=datos.canal_reporte or "Web",
+            categoria=datos.categoria,
+            prioridad=datos.prioridad,
+            estado="Registrado",
+            es_garantia=True,
+            costo_cero=True
         )
+        
+        db.add(nuevo_incidente)
+        db.commit()
+        db.refresh(nuevo_incidente)
+        return nuevo_incidente
 
-    nuevo_incidente = models.Incidente(
-        servicio_id=servicio.id,
-        usuario_id=datos.usuario_id,
-        descripcion=datos.descripcion,
-        canal_reporte=datos.canal_reporte or "Web",
-        categoria=datos.categoria,
-        prioridad=datos.prioridad,
-        estado="Registrado",
-        es_garantia=True,
-        costo_cero=True
-    )
-    
-    db.add(nuevo_incidente)
-    db.commit()
-    db.refresh(nuevo_incidente)
-    return nuevo_incidente
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR INTERNO AL REGISTRAR INCIDENTE: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error interno del servidor: {str(e)}"
+        )
 
 @router.get("/", response_model=list[schemas.IncidenteResponse])
 def listar_incidentes(db: Session = Depends(get_db)):
