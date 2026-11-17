@@ -148,26 +148,3 @@ class ServicioFoto(Base):
     url_foto = Column(Text, nullable=False)
     fecha_subida = Column(DateTime, server_default=func.now())
     
-class Incidente(Base):
-    __tablename__ = "incidentes"
-    __table_args__ = {'extend_existing': True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    servicio_id = Column(Integer, ForeignKey("servicios.id"), nullable=False)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    descripcion = Column(Text, nullable=False)
-    canal_reporte = Column(String(20))
-    categoria = Column(String(50))
-    prioridad = Column(String(10))
-    sla_limite = Column(DateTime)
-    estado = Column(String(30))
-    solucion_remota = Column(Boolean)
-    es_garantia = Column(Boolean)
-    costo_cero = Column(Boolean)
-    diagnostico_resolucion = Column(Text)
-    fecha_creacion = Column(DateTime)
-    fecha_cierre = Column(DateTime)
-    calificacion_csat = Column(Integer)
-
-    # Relación explícita con la tabla servicios
-    servicio = relationship("OrdenServicio", primaryjoin="Incidente.servicio_id == OrdenServicio.id", back_populates="incidentes")
