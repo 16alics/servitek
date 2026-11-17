@@ -34,7 +34,6 @@ def registrar_incidente(
     datos: schemas.IncidenteCreate, 
     db: Session = Depends(get_db)
 ):
-    # 1. Validar que la orden de servicio exista
     orden = db.query(models.OrdenServicio).filter(models.OrdenServicio.id == datos.orden_id).first()
     if not orden:
         raise HTTPException(status_code=404, detail="La orden de servicio vinculada no existe")
@@ -42,7 +41,6 @@ def registrar_incidente(
     horas_sla = SLA_HORAS.get(datos.prioridad, 1)
     limite = datetime.now(timezone.utc) + timedelta(hours=horas_sla)
 
-    # 2. Crear el incidente usando directamente el usuario_id del payload
     nuevo_incidente = models.Incidente(
         orden_id=datos.orden_id,
         usuario_id=datos.usuario_id,
@@ -59,7 +57,6 @@ def registrar_incidente(
     db.commit()
     db.refresh(nuevo_incidente)
 
-    # 3. Generar la notificación interna
     codigo_ref = getattr(orden, "codigo", None) or getattr(orden, "codigo_orden", str(orden.id))
     notificacion = models.Notificacion(
         usuario_id=datos.usuario_id,
