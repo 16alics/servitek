@@ -29,14 +29,12 @@ def obtener_equipos_por_dni(dni: str, db: Session = Depends(get_db)):
     
     return {"cliente": {"id": cliente.id, "nombre": cliente.nombre, "dni": cliente.dni}, "equipos": ordenes_entregadas}
 
-# 2. Registrar Incidente (Cliente desde Panel Web o Recepcionista Presencial)[cite: 11, 12]
 @router.post("/", response_model=schemas.IncidenteResponse)
 def registrar_incidente(
     datos: schemas.IncidenteCreate, 
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user) # 👈 Obtenemos el usuario autenticado de forma segura
+    db: Session = Depends(get_db)
 ):
-    # 1. Validar que la orden exista y pertenezca al cliente (o sea válida)
+    # 1. Validar que la orden de servicio exista
     orden = db.query(models.OrdenServicio).filter(models.OrdenServicio.id == datos.orden_id).first()
     if not orden:
         raise HTTPException(status_code=404, detail="La orden de servicio vinculada no existe")
@@ -44,10 +42,10 @@ def registrar_incidente(
     horas_sla = SLA_HORAS.get(datos.prioridad, 1)
     limite = datetime.now(timezone.utc) + timedelta(hours=horas_sla)
 
-    # 2. Crear el incidente usando el ID del usuario autenticado
+    # 2. Crear el incidente usando el usuario_id que manda el frontend de manera segura
     nuevo_incidente = models.Incidente(
         orden_id=datos.orden_id,
-        usuario_id=current_user.id, # 👈 Usamos el ID del token actual
+        usuario_id=datos.usuario_id, # 👈 Usamos el ID del usuario recibido en el payload
         descripcion=datos.descripcion,
         canal_reporte=datos.canal_reporte or "Web Cliente",
         categoria=datos.categoria,
@@ -61,11 +59,12 @@ def registrar_incidente(
     db.commit()
     db.refresh(nuevo_incidente)
 
-    # 3. Generar la notificación interna (usando orden.codigo en lugar de orden.codigo_orden)
+    # 3. Generar la notificación interna para soporte/técnicos
+    codigo_ref = getattr(orden, "codigo", None) or getattr(orden, "codigo_orden", str(orden.id))
     notificacion = models.Notificacion(
-        usuario_id=current_user.id,
+        usuario_id=datos.usuario_id,
         rol_destino="tecnico",
-        mensaje=f"🚨 Incidente {datos.prioridad} registrado para Orden #{orden.codigo}: {datos.descripcion}"
+        mensaje=f"🚨 Incidente {datos.prioridad} registrado para Orden #{codigo_ref}: {datos.descripcion}"
     )
     db.add(notificacion)
     db.commit()
