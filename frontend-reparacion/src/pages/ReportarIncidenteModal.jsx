@@ -13,15 +13,31 @@ const handleSubmit = async (e) => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || '';
       
-      // 🔑 Buscamos el token probando las claves más comunes del proyecto
-      const token = localStorage.getItem('token') || 
-                    localStorage.getItem('access_token') || 
-                    localStorage.getItem('access-token');
+      // 🔑 Buscamos el token en las claves comunes
+      let rawToken = localStorage.getItem('token') || 
+                     localStorage.getItem('access_token') || 
+                     localStorage.getItem('access-token');
+
+      // Si el token se guardó como un objeto JSON stringificado, lo extraemos con seguridad
+      let token = rawToken;
+      if (rawToken && (rawToken.startsWith('{') || rawToken.startsWith('"'))) {
+        try {
+          const parsed = JSON.parse(rawToken);
+          token = parsed.access_token || parsed.token || parsed.access-token || rawToken;
+        } catch (err) {
+          // Si no es JSON válido, se queda como está
+        }
+      }
+
+      // Limpiamos comillas extra si las hubiera
+      if (token) {
+        token = token.replace(/^["'](.+)["']$/, '$1');
+      }
 
       const usuarioStorage = JSON.parse(localStorage.getItem('usuario') || '{}');
 
       if (!token) {
-        alert('No se encontró una sesión activa. Por favor, vuelve a iniciar sesión.');
+        alert('No se encontró una sesión activa válida. Por favor, vuelve a iniciar sesión.');
         return;
       }
 
