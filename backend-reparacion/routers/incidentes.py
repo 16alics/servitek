@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,BackgroundTasks,Response
 from sqlalchemy.orm import Session
+import os
+import traceback
 from datetime import datetime, timedelta, timezone
 from typing import List
 import models, schemas
@@ -29,30 +31,54 @@ def obtener_equipos_por_dni(dni: str, db: Session = Depends(get_db)):
     
     return {"cliente": {"id": cliente.id, "nombre": cliente.nombre, "dni": cliente.dni}, "equipos": ordenes_entregadas}
 
+
+
+def _garantia_vigente(servicio: models.Servicio) -> bool:
+    ahora = datetime.now(timezone.utc).replace(tzinfo=None)
+    if servicio.fecha_vencimiento_garantia is not None:
+        return ahora <= servicio.fecha_vencimiento_garantia
+    if servicio.fecha_salida is not None and servicio.garantia_dias and servicio.garantia_dias > 0:
+        return ahora <= (servicio.fecha_salida + timedelta(days=servicio.garantia_dias))
+    return False
 @router.post("/", response_model=schemas.IncidenteResponse)
 def registrar_incidente(
-    datos: schemas.IncidenteCreate, 
-    db: Session = Depends(get_db)
+    datos: schemas.IncidenteCreate,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
-    # Tomamos el ID del campo que venga lleno (servicio_id u orden_id)
     id_objetivo = datos.servicio_id or datos.orden_id
-
     if not id_objetivo:
         raise HTTPException(
-            status_code=422, 
-            detail="Falta el identificador del servicio u orden."
+            status_code=422,
+            detail="Falta el identificador del servicio u orden.",
         )
 
-    # Verificamos que el servicio exista en la base de datos
-    servicio = db.query(models.OrdenServicio).filter(
-        models.OrdenServicio.id == id_objetivo
-    ).first()
-
+    servicio = db.query(models.Servicio).filter(models.Servicio.id == id_objetivo).first()
     if not servicio:
         raise HTTPException(
-            status_code=404, 
-            detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos."
+            status_code=404,
+            detail=f"El servicio con ID '{id_objetivo}' no existe en la base de datos.",
         )
+
+    vigente = _garantia_vigente(servicio)
+    es_garantia_final = vigente if datos.es_garantia is None else (bool(datos.es_garantia) and vigente)
+
+    if datos.es_garantia and not vigente:
+        raise HTTPException(
+            status_code=400,
+            detail="El servicio no cuenta con garantía vigente.",
+        )
+
+    ahora = datetime.now(timezone.utc).replace(tzinfo=None)
+    if es_garantia_final:
+        prioridad_final = "P1"
+        costo_cero_final = True
+        sla_limite = ahora + timedelta(hours=1)  # SLA crítico < 1 hora para garantía sin costo[cite: 6]
+    else:
+        prioridad_final = datos.prioridad or "P3"
+        costo_cero_final = False
+        sla_limite = ahora + timedelta(hours=datos.sla_horas or 8)
 
     nuevo_incidente = models.Incidente(
         servicio_id=servicio.id,
@@ -60,15 +86,78 @@ def registrar_incidente(
         descripcion=datos.descripcion,
         canal_reporte=datos.canal_reporte or "Web",
         categoria=datos.categoria or "Hardware",
-        prioridad=datos.prioridad or "P1",
+        prioridad=prioridad_final,
+        sla_limite=sla_limite,
         estado="Registrado",
-        es_garantia=True,
-        costo_cero=True
+        solucion_remota=bool(datos.solucion_remota),
+        es_garantia=es_garantia_final,
+        costo_cero=costo_cero_final,
     )
-    
+
     db.add(nuevo_incidente)
     db.commit()
     db.refresh(nuevo_incidente)
+
+    alerta_msg = f"Se registró el incidente #{nuevo_incidente.id} correctamente."
+    response.headers["X-Alerta"] = alerta_msg
+    print(f">>> [ALERTA] {alerta_msg} | servicio_id={nuevo_incidente.servicio_id} | prioridad={nuevo_incidente.prioridad}")
+
+    print(">>> [DEBUG] Entrando al bloque de envío de correo en incidentes...")
+    cliente = getattr(getattr(servicio, "equipo", None), "cliente", None)
+    correo_destino = getattr(cliente, "email", None) or getattr(cliente, "correo", None)
+
+    asunto = f"Incidente #{nuevo_incidente.id} Registrado - Orden {servicio.codigo_servicio}"
+    cuerpo_html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 25px; background-color: #f8fafc; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0;">
+        <h2 style="color: #0f172a; margin-top: 0;">Incidente Registrado - Servitek 🛠️</h2>
+        <p style="color: #475569; font-size: 14px;">Se registró correctamente el incidente <strong>#{nuevo_incidente.id}</strong> asociado a la orden <strong>{servicio.codigo_servicio}</strong>.</p>
+        
+        <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Prioridad:</strong> {nuevo_incidente.prioridad}</p>
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Garantía:</strong> {"Sí (Costo cero)" if nuevo_incidente.es_garantia else "No"}</p>
+            <p style="margin: 5px 0; color: #334155; font-size: 13px;"><strong>Descripción:</strong> {nuevo_incidente.descripcion}</p>
+        </div>
+
+        <p style="color: #475569; font-size: 14px;">Nuestro equipo dará seguimiento según la prioridad asignada.</p>
+        
+        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Atentamente,<br>El equipo de Servitek</p>
+    </div>
+    """
+
+    if correo_destino:
+        try:
+            import sib_api_v3_sdk
+            from sib_api_v3_sdk.rest import ApiException
+
+            api_key_val = os.getenv("BREVO_API_KEY")
+            print(f">>> [DEBUG] BREVO_API_KEY presente?: {bool(api_key_val)}")
+
+            configuration = sib_api_v3_sdk.Configuration()
+            configuration.api_key["api-key"] = api_key_val
+
+            api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+                sib_api_v3_sdk.ApiClient(configuration)
+            )
+
+            sender = {"name": "Servitek Soporte", "email": "aliciacarranzasalazar16@gmail.com"}
+            to = [{"email": correo_destino}]
+
+            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+                to=to,
+                sender=sender,
+                subject=asunto,
+                html_content=cuerpo_html,
+            )
+
+            print(">>> [DEBUG] Intentando enviar correo a través de la API de Brevo...")
+            api_response = api_instance.send_transac_email(send_smtp_email)
+            print(">>> [DEBUG] ¡Correo enviado con éxito! Respuesta:", api_response)
+        except Exception as e:
+            print(f"❌ [ERROR CRÍTICO BREVO] Falló el envío en incidentes: {str(e)}")
+            traceback.print_exc()
+    else:
+        print("⚠️ [DEBUG] No se encontró correo del cliente en el servicio; se omite envío por Brevo.")
+
     return nuevo_incidente
 
 @router.get("/", response_model=list[schemas.IncidenteResponse])

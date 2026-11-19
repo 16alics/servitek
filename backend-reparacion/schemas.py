@@ -199,14 +199,14 @@ class IncidenteCreate(BaseModel):
     descripcion: str
     canal_reporte: Optional[str] = "Web"
     categoria: Optional[str] = "Hardware"
-    prioridad: Optional[str] = "P1"
-
-    class Config:
-        extra = "ignore"
+    prioridad: Optional[str] = "P3"
+    solucion_remota: Optional[bool] = False
+    es_garantia: Optional[bool] = None
+    sla_horas: Optional[int] = 8
 
     class Config:
         populate_by_name = True
-        extra = "ignore" # Ignora campos duplicados o sobrantes como el extra canal_reporte
+        extra = "ignore"
         
 class IncidenteCSAT(BaseModel):
     calificacion_csat: int

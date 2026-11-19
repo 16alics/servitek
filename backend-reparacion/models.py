@@ -82,7 +82,8 @@ class Servicio(Base):
     
     fecha_ingreso = Column(DateTime, default=datetime.utcnow)
     fecha_salida = Column(DateTime, nullable=True)
-    
+    garantia_dias = Column(Integer, default=30, nullable=True)
+    fecha_vencimiento_garantia = Column(DateTime, nullable=True)
     equipo = relationship("Equipo", back_populates="servicios")
     tecnico = relationship("Tecnico")
     diagnostico = relationship("Diagnostico", back_populates="servicio", uselist=False)
@@ -156,9 +157,17 @@ class Incidente(Base):
     servicio_id = Column(Integer, ForeignKey("servicios.id"), nullable=False)
     usuario_id = Column(Integer, nullable=False)
     descripcion = Column(Text, nullable=False)
+    canal_reporte = Column(String, nullable=True)
     categoria = Column(String, nullable=True)
     prioridad = Column(String, nullable=True)
-    canal_reporte = Column(String, nullable=True)
+    sla_limite = Column(DateTime, nullable=True)
     estado = Column(String, default="Registrado")
+    solucion_remota = Column(Boolean, default=False)
     es_garantia = Column(Boolean, default=True)
     costo_cero = Column(Boolean, default=True)
+    diagnostico_resolucion = Column(Text, nullable=True)
+    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
+    fecha_cierre = Column(DateTime(timezone=True), nullable=True)
+    calificacion_csat = Column(Integer, nullable=True)
+
+    servicio = relationship("Servicio", back_populates="incidentes")
