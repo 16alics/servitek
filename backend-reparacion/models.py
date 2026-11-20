@@ -169,5 +169,4 @@ class Incidente(Base):
     fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
     fecha_cierre = Column(DateTime(timezone=True), nullable=True)
     calificacion_csat = Column(Integer, nullable=True)
-
-    servicio = relationship("Servicio", back_populates="incidentes")
+    servicio = relationship("Servicio") 
