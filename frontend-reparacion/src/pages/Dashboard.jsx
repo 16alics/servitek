@@ -879,17 +879,20 @@ const handleReset = async (e) => {
           </div>
         </div>
       )}
-      {/* Modal de Reporte de Incidente / Garantía */}
+     {/* Modal de Reporte de Incidente / Garantía */}
       {mostrarModalIncidente && selectedOrdenParaIncidente && (
-        <ReportarIncidenteModal
+        <ModalReportarIncidente
+          isOpen={mostrarModalIncidente}
           orden={selectedOrdenParaIncidente}
+          usuarioActual={typeof usuario !== "undefined" ? usuario : null}
           onClose={() => {
             setMostrarModalIncidente(false);
             setSelectedOrdenParaIncidente(null); // 👈 Limpiamos para que no se quede pegado
           }}
-          onSuccess={() => {
+          onSuccess={(mensajeAlerta) => {
             setMostrarModalIncidente(false);
             setSelectedOrdenParaIncidente(null);
+            if (mensajeAlerta) alert(mensajeAlerta);
             // Opcional: recargar tus servicios aquí si tienes una función para ello
           }}
         />
