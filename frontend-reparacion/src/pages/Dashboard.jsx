@@ -588,18 +588,18 @@ const handleReset = async (e) => {
                     )}
                   </div>
                 )}
-                <ModalReportarIncidente
-                  isOpen={mostrarModalIncidente}
-                  orden={selectedOrdenParaIncidente}
-                  usuarioActual={usuarioActual}
-                  onClose={() => {
-                    setMostrarModalIncidente(false);
-                    setSelectedOrdenParaIncidente(null);
-                  }}
-                  onSuccess={(mensajeAlerta) => {
-                    alert(mensajeAlerta); // O tu alerta/toast en pantalla
-                  }}
-                />
+               <ModalReportarIncidente
+  isOpen={mostrarModalIncidente}
+  orden={selectedOrdenParaIncidente}
+  usuarioActual={typeof usuario !== "undefined" ? usuario : null}
+  onClose={() => {
+    setMostrarModalIncidente(false);
+    setSelectedOrdenParaIncidente(null);
+  }}
+  onSuccess={(mensajeAlerta) => {
+    alert(mensajeAlerta);
+  }}
+/>
               </div>
             </div>
           )}
