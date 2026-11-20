@@ -5,6 +5,7 @@ import QRCode from 'react-qr-code';
 import Header from '../components/Header';
 import QRModal from '../components/QRModal';
 import ReportarIncidenteModal from './ReportarIncidenteModal'; 
+import ModalReportarIncidente from "./components/ModalReportarIncidente";
 import { toast } from 'react-toastify';
 export default function Dashboard() {
   const navigate = useNavigate();
