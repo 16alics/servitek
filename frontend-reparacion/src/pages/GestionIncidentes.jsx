@@ -7,8 +7,9 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const ESTADOS_INCIDENTE = [
   "Todos",
   "Abierto",
-  "En revisión",
-  "En reparación",
+  "En revisión WhatsApp",
+  "Resuelto por WhatsApp",
+  "Garantía en Diagnóstico",
   "Resuelto",
 ];
 
@@ -17,20 +18,26 @@ export default function GestionIncidentes() {
   const [incidentes, setIncidentes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [mensajeExito, setMensajeExito] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("Todos");
   const [busqueda, setBusqueda] = useState("");
   const [guardandoId, setGuardandoId] = useState(null);
   const [notasEditables, setNotasEditables] = useState({});
 
+  const obtenerHeaders = () => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const obtenerIncidentes = async () => {
     setLoading(true);
     setError("");
+    setMensajeExito("");
     try {
-      const token =
-        localStorage.getItem("token") || sessionStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      const res = await axios.get(`${API_URL}/api/incidentes/`, { headers });
+      const res = await axios.get(`${API_URL}/api/incidentes/`, {
+        headers: obtenerHeaders(),
+      });
       const data = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data?.data)
@@ -60,21 +67,24 @@ export default function GestionIncidentes() {
     obtenerIncidentes();
   }, []);
 
-  const actualizarIncidente = async (incidente, nuevoEstado) => {
+  const actualizarIncidente = async (
+    incidente,
+    nuevoEstado,
+    extraPayload = {}
+  ) => {
     setGuardandoId(incidente.id);
     setError("");
+    setMensajeExito("");
     try {
-      const token =
-        localStorage.getItem("token") || sessionStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
+      const notaActual = notasEditables[incidente.id] ?? "";
       const payload = {
         estado: nuevoEstado,
-        notas_resolucion: notasEditables[incidente.id] ?? "",
+        notas_resolucion: notaActual,
+        ...extraPayload,
       };
 
       await axios.patch(`${API_URL}/api/incidentes/${incidente.id}`, payload, {
-        headers,
+        headers: obtenerHeaders(),
       });
 
       setIncidentes((prev) =>
@@ -82,17 +92,106 @@ export default function GestionIncidentes() {
           item.id === incidente.id
             ? {
                 ...item,
-                estado: nuevoEstado,
-                notas_resolucion: payload.notas_resolucion,
+                ...payload,
               }
             : item
         )
+      );
+      setMensajeExito(
+        `Incidente #${incidente.id} actualizado a "${nuevoEstado}".`
       );
     } catch (err) {
       console.error("Error al actualizar incidente:", err);
       setError(
         err?.response?.data?.detail ||
           "No se pudo actualizar el estado del incidente."
+      );
+    } finally {
+      setGuardandoId(null);
+    }
+  };
+
+  // Paso 1: Intentar resolver de forma remota vía WhatsApp
+  const resolverViaWhatsApp = async (incidente) => {
+    const notaWhatsApp =
+      (notasEditables[incidente.id] ?? "").trim() ||
+      "Solucionado remotamente vía WhatsApp.";
+
+    setNotasEditables((prev) => ({
+      ...prev,
+      [incidente.id]: notaWhatsApp,
+    }));
+
+    await actualizarIncidente(incidente, "Resuelto por WhatsApp", {
+      resuelto_whatsapp: true,
+      notas_resolucion: notaWhatsApp,
+    });
+  };
+
+  // Paso 2: Si no se resuelve por WhatsApp, registrar como garantía en SERVICIOS y pasar a Diagnóstico
+  const pasarAGarantiaYDiagnostico = async (incidente) => {
+    setGuardandoId(incidente.id);
+    setError("");
+    setMensajeExito("");
+    try {
+      const headers = obtenerHeaders();
+      const notaGarantia =
+        (notasEditables[incidente.id] ?? "").trim() ||
+        "No resuelto por WhatsApp; registrado como garantía en Servicios y enviado a Diagnóstico.";
+
+      const payloadIncidente = {
+        estado: "Garantía en Diagnóstico",
+        es_garantia: true,
+        costo_cero: true,
+        notas_resolucion: notaGarantia,
+      };
+
+      await axios.patch(
+        `${API_URL}/api/incidentes/${incidente.id}`,
+        payloadIncidente,
+        { headers }
+      );
+
+      const servicioId = incidente.servicio_id || incidente.orden_id;
+      if (servicioId) {
+        await axios.patch(
+          `${API_URL}/api/servicios/${servicioId}`,
+          {
+            estado: "Diagnóstico",
+            es_garantia: true,
+            costo_cero: true,
+            motivo_garantia: notaGarantia,
+          },
+          { headers }
+        );
+      }
+
+      setNotasEditables((prev) => ({
+        ...prev,
+        [incidente.id]: notaGarantia,
+      }));
+
+      setIncidentes((prev) =>
+        prev.map((item) =>
+          item.id === incidente.id
+            ? {
+                ...item,
+                ...payloadIncidente,
+              }
+            : item
+        )
+      );
+
+      setMensajeExito(
+        servicioId
+          ? `Incidente #${incidente.id} registrado como garantía en el servicio #${servicioId} y enviado a Diagnóstico.`
+          : `Incidente #${incidente.id} marcado como garantía en Diagnóstico.`
+      );
+    } catch (err) {
+      console.error("Error al registrar garantía y pasar a diagnóstico:", err);
+      setError(
+        err?.response?.data?.detail ||
+          "No se pudo registrar como garantía en Servicios ni pasar a Diagnóstico."
       );
     } finally {
       setGuardandoId(null);
@@ -132,8 +231,8 @@ export default function GestionIncidentes() {
               Gestión de Incidentes y Garantías
             </h1>
             <p className="text-sm text-slate-500">
-              Revisa reportes de garantía o fallas posteriores a la entrega y
-              actualiza su seguimiento.
+              Primero evalúa si se resuelve vía WhatsApp; si no, registra como
+              garantía sin costo en Servicios y pasa a Diagnóstico[cite: 2, 3, 4].
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -181,6 +280,12 @@ export default function GestionIncidentes() {
           />
         </div>
 
+        {mensajeExito && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-medium">
+            {mensajeExito}
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             {error}
@@ -199,7 +304,7 @@ export default function GestionIncidentes() {
           <div className="grid grid-cols-1 gap-4">
             {incidentesFiltrados.map((item) => {
               const estadoActual = item.estado || "Abierto";
-              const prioridad = item.prioridad || "Normal";
+              const prioridad = item.prioridad || "P1";
 
               return (
                 <div
@@ -211,9 +316,11 @@ export default function GestionIncidentes() {
                       <span className="font-bold text-slate-800">
                         Incidente #{item.id}
                       </span>
-                      {(item.codigo_orden || item.orden_codigo || item.servicio_id) && (
+                      {(item.codigo_orden ||
+                        item.orden_codigo ||
+                        item.servicio_id) && (
                         <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold">
-                          Orden:{" "}
+                          Servicio / Orden:{" "}
                           {item.codigo_orden ||
                             item.orden_codigo ||
                             `#${item.servicio_id}`}
@@ -225,6 +332,11 @@ export default function GestionIncidentes() {
                       <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
                         Estado: {estadoActual}
                       </span>
+                      {(item.es_garantia || item.costo_cero) && (
+                        <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 text-xs font-bold">
+                          Garantía Costo Cero
+                        </span>
+                      )}
                     </div>
 
                     {item.fecha_creacion && (
@@ -248,10 +360,10 @@ export default function GestionIncidentes() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end pt-2">
-                    <div className="md:col-span-2">
+                  <div className="space-y-3 pt-2">
+                    <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">
-                        Notas de seguimiento / resolución
+                        Notas de atención WhatsApp / Garantía / Diagnóstico
                       </label>
                       <input
                         type="text"
@@ -262,39 +374,63 @@ export default function GestionIncidentes() {
                             [item.id]: e.target.value,
                           }))
                         }
-                        placeholder="Escribe diagnóstico, revisión o solución..."
+                        placeholder="Indica qué se probó por WhatsApp o el motivo del pase a garantía..."
                         className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={estadoActual}
-                        disabled={guardandoId === item.id}
-                        onChange={(e) =>
-                          actualizarIncidente(item, e.target.value)
-                        }
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      >
-                        {ESTADOS_INCIDENTE.filter((e) => e !== "Todos").map(
-                          (est) => (
-                            <option key={est} value={est}>
-                              {est}
-                            </option>
-                          )
-                        )}
-                      </select>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      {/* Acciones principales del flujo */}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={guardandoId === item.id}
+                          onClick={() => resolverViaWhatsApp(item)}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer"
+                        >
+                          💬 Resuelto vía WhatsApp
+                        </button>
 
-                      <button
-                        type="button"
-                        disabled={guardandoId === item.id}
-                        onClick={() =>
-                          actualizarIncidente(item, estadoActual)
-                        }
-                        className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-semibold transition cursor-pointer shrink-0"
-                      >
-                        {guardandoId === item.id ? "..." : "Guardar"}
-                      </button>
+                        <button
+                          type="button"
+                          disabled={guardandoId === item.id}
+                          onClick={() => pasarAGarantiaYDiagnostico(item)}
+                          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer"
+                        >
+                          🛡️ No resuelto → Garantía en Servicios y Diagnóstico
+                        </button>
+                      </div>
+
+                      {/* Ajuste manual de estado y guardado */}
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={estadoActual}
+                          disabled={guardandoId === item.id}
+                          onChange={(e) =>
+                            actualizarIncidente(item, e.target.value)
+                          }
+                          className="px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        >
+                          {ESTADOS_INCIDENTE.filter((e) => e !== "Todos").map(
+                            (est) => (
+                              <option key={est} value={est}>
+                                {est}
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        <button
+                          type="button"
+                          disabled={guardandoId === item.id}
+                          onClick={() =>
+                            actualizarIncidente(item, estadoActual)
+                          }
+                          className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-semibold transition cursor-pointer shrink-0"
+                        >
+                          {guardandoId === item.id ? "..." : "Guardar"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
