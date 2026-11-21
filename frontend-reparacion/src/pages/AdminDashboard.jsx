@@ -1147,7 +1147,13 @@ if (userRole === 'recepcionista') {
           >
             + Módulo de Recepción
           </button>
-          
+          <button
+  type="button"
+  onClick={() => navigate("/gestion-incidentes")}
+  className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition cursor-pointer"
+>
+  <span>⚠️ Gestión de Incidentes</span>
+</button>
           <button 
             onClick={() => setShowRepuestoModal(true)}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"

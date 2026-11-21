@@ -13,7 +13,9 @@ import TecnicosAdmin from './pages/TecnicosAdmin';
 import LandingServitek from './pages/LandingServitek';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import GestionIncidentes from "./pages/GestionIncidentes"; // Verifica el nombre exacto del archivo
 
+// Dentro de <Routes> ...
 function App() {
   return (
     <Router>
@@ -40,6 +42,8 @@ function App() {
         <Route path="/admin/reportes" element={<ReportesAdmin />} />
         <Route path="/admin/usuarios" element={<UsuariosAdmin />} />
         <Route path="/admin/tecnicos" element={<TecnicosAdmin />} />
+        <Route path="/gestion-incidentes" element={<GestionIncidentes />} />
+
 
         {/* Dashboard General */}
         <Route path="/dashboard" element={<Dashboard />} />
