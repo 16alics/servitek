@@ -1154,14 +1154,14 @@ if (userRole === 'recepcionista') {
           >
             + Gestionar Repuestos
           </button>
-
           <button
-  type="button"
-  onClick={() => navigate("/gestion-incidentes")}
-  className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition cursor-pointer"
->
-  <span>⚠️ Gestión de Incidentes</span>
-</button>
+          type="button"
+          onClick={() => navigate("/gestion-incidentes")}
+          className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition cursor-pointer"
+          >
+          <span>⚠️ Gestión de Incidentes</span>
+          </button>
+          
         </div>
       )}
          {userRole === 'admin' && (
