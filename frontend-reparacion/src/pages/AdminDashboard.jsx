@@ -1147,6 +1147,14 @@ if (userRole === 'recepcionista') {
           >
             + Módulo de Recepción
           </button>
+          
+          <button 
+            onClick={() => setShowRepuestoModal(true)}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            + Gestionar Repuestos
+          </button>
+
           <button
   type="button"
   onClick={() => navigate("/gestion-incidentes")}
@@ -1154,12 +1162,6 @@ if (userRole === 'recepcionista') {
 >
   <span>⚠️ Gestión de Incidentes</span>
 </button>
-          <button 
-            onClick={() => setShowRepuestoModal(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-          >
-            + Gestionar Repuestos
-          </button>
         </div>
       )}
          {userRole === 'admin' && (
