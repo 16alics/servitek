@@ -1,0 +1,3 @@
+export default function GestionIncidentes() {
+  // ... tu código del componente ...
+}
