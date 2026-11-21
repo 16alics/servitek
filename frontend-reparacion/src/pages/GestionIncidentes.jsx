@@ -4,6 +4,9 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+const IMG_SOPORTE_WHATSAPP = "/imagenes/soporte-whatsapp.png";
+const IMG_GARANTIA_DIAGNOSTICO = "/imagenes/garantia-diagnostico.png";
+
 const ESTADOS_INCIDENTE = [
   "Todos",
   "Pendiente",
@@ -23,12 +26,20 @@ const limpiarTelefono = (tel) => {
   if (!tel) return "";
   const soloDigitos = String(tel).replace(/\D/g, "");
   if (!soloDigitos) return "";
-  // Si es número de Perú de 9 dígitos sin código de país, antepone 51
   if (soloDigitos.length === 9 && soloDigitos.startsWith("9")) {
     return `51${soloDigitos}`;
   }
   return soloDigitos;
 };
+
+const obtenerFotoAdjunta = (item) =>
+  item.foto_url ||
+  item.imagen_url ||
+  item.evidencia_url ||
+  item.foto ||
+  item.imagen ||
+  item.evidencia ||
+  "";
 
 export default function GestionIncidentes() {
   const navigate = useNavigate();
@@ -41,7 +52,6 @@ export default function GestionIncidentes() {
   const [soloGarantia, setSoloGarantia] = useState(false);
   const [guardandoId, setGuardandoId] = useState(null);
 
-  // Estados editables por tarjeta
   const [notasEditables, setNotasEditables] = useState({});
   const [estadosEditables, setEstadosEditables] = useState({});
   const [incidenteExpandido, setIncidenteExpandido] = useState({});
@@ -144,7 +154,6 @@ export default function GestionIncidentes() {
     }
   };
 
-  // Paso 1: Resolver de forma remota vía WhatsApp
   const resolverViaWhatsApp = async (incidente) => {
     const notaWhatsApp =
       (notasEditables[incidente.id] ?? "").trim() ||
@@ -161,7 +170,6 @@ export default function GestionIncidentes() {
     });
   };
 
-  // Abrir chat de WhatsApp con mensaje prellenado si hay teléfono disponible
   const abrirWhatsAppSoporte = (incidente) => {
     const telefono = limpiarTelefono(
       incidente.telefono ||
@@ -172,7 +180,9 @@ export default function GestionIncidentes() {
     const ordenRef =
       incidente.codigo_orden ||
       incidente.orden_codigo ||
-      (incidente.servicio_id ? `Servicio #${incidente.servicio_id}` : `Incidente #${incidente.id}`);
+      (incidente.servicio_id
+        ? `Servicio #${incidente.servicio_id}`
+        : `Incidente #${incidente.id}`);
     const texto = encodeURIComponent(
       `Hola, te contactamos de Servitek sobre tu reporte (${ordenRef}) respecto a: ${
         incidente.descripcion || incidente.falla || "incidente reportado"
@@ -186,7 +196,6 @@ export default function GestionIncidentes() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  // Paso 2: Si no se resuelve por WhatsApp, registrar como garantía en SERVICIOS y pasar a Diagnóstico
   const ejecutarPaseAGarantiaYDiagnostico = async (incidente) => {
     setGuardandoId(incidente.id);
     setError("");
@@ -268,7 +277,6 @@ export default function GestionIncidentes() {
     }));
   };
 
-  // Métricas rápidas para tarjetas interactivas
   const totalIncidentes = incidentes.length;
   const totalPendientes = incidentes.filter(
     (i) => normalizarEstado(i.estado) === "Pendiente"
@@ -325,16 +333,23 @@ export default function GestionIncidentes() {
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Encabezado */}
+        {/* Encabezado con imagen estilizada */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              Gestión de Incidentes y Garantías
-            </h1>
-            <p className="text-sm text-slate-500">
-              Primero intenta resolver vía WhatsApp; si no procede, registra como
-              garantía sin costo en Servicios y pasa a Diagnóstico.
-            </p>
+          <div className="flex items-center gap-4">
+            <img
+              src={IMG_SOPORTE_WHATSAPP}
+              alt="Soporte remoto y gestión de incidentes"
+              className="w-16 h-16 rounded-2xl object-cover border border-emerald-200 shadow-sm shrink-0"
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">
+                Gestión de Incidentes y Garantías
+              </h1>
+              <p className="text-sm text-slate-500">
+                Primero evalúa si se resuelve vía WhatsApp; si no, registra como
+                garantía sin costo en Servicios y pasa a Diagnóstico[cite: 2, 3, 4].
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -410,16 +425,23 @@ export default function GestionIncidentes() {
               setFiltroEstado("Garantía en Diagnóstico");
               setSoloGarantia(false);
             }}
-            className={`text-left p-4 rounded-2xl border transition cursor-pointer ${
+            className={`text-left p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${
               filtroEstado === "Garantía en Diagnóstico"
                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                 : "bg-white text-slate-800 border-slate-200 hover:border-blue-300"
             }`}
           >
-            <p className="text-xs font-semibold opacity-75">
-              Garantía / Diagnóstico
-            </p>
-            <p className="text-2xl font-extrabold mt-1">{totalGarantia}</p>
+            <div>
+              <p className="text-xs font-semibold opacity-75">
+                Garantía / Diagnóstico
+              </p>
+              <p className="text-2xl font-extrabold mt-1">{totalGarantia}</p>
+            </div>
+            <img
+              src={IMG_GARANTIA_DIAGNOSTICO}
+              alt="Garantía y diagnóstico"
+              className="w-12 h-12 rounded-xl object-cover border border-white/40 shrink-0"
+            />
           </button>
         </div>
 
@@ -478,7 +500,7 @@ export default function GestionIncidentes() {
           </div>
         </div>
 
-        {/* Alertas de éxito o error */}
+        {/* Alertas */}
         {mensajeExito && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between gap-2">
             <span>{mensajeExito}</span>
@@ -536,13 +558,13 @@ export default function GestionIncidentes() {
               const prioridad = item.prioridad || "P1";
               const estaGuardando = guardandoId === item.id;
               const verDetalles = Boolean(incidenteExpandido[item.id]);
+              const fotoAdjunta = obtenerFotoAdjunta(item);
 
               return (
                 <div
                   key={item.id}
                   className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-slate-300 transition space-y-4"
                 >
-                  {/* Cabecera de la tarjeta */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-slate-800">
@@ -595,22 +617,38 @@ export default function GestionIncidentes() {
                     </div>
                   </div>
 
-                  {/* Descripción */}
-                  <div className="space-y-1">
-                    {(item.categoria || item.tipo) && (
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Tipo / Categoría: {item.categoria || item.tipo}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start justify-between">
+                    <div className="space-y-1 flex-1">
+                      {(item.categoria || item.tipo) && (
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Tipo / Categoría: {item.categoria || item.tipo}
+                        </p>
+                      )}
+                      <p className="text-sm text-slate-700">
+                        {item.descripcion ||
+                          item.falla ||
+                          item.motivo ||
+                          "Sin descripción registrada."}
                       </p>
+                    </div>
+
+                    {fotoAdjunta && (
+                      <a
+                        href={fotoAdjunta}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 group"
+                        title="Ver imagen adjunta del incidente"
+                      >
+                        <img
+                          src={fotoAdjunta}
+                          alt={`Evidencia incidente #${item.id}`}
+                          className="w-24 h-20 rounded-xl object-cover border border-slate-200 group-hover:opacity-90 transition"
+                        />
+                      </a>
                     )}
-                    <p className="text-sm text-slate-700">
-                      {item.descripcion ||
-                        item.falla ||
-                        item.motivo ||
-                        "Sin descripción registrada."}
-                    </p>
                   </div>
 
-                  {/* Panel desplegable de metadatos extra */}
                   {verDetalles && (
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
@@ -634,7 +672,6 @@ export default function GestionIncidentes() {
                     </div>
                   )}
 
-                  {/* Notas de seguimiento */}
                   <div className="space-y-3 pt-1">
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">
@@ -654,7 +691,6 @@ export default function GestionIncidentes() {
                       />
                     </div>
 
-                    {/* Acciones interactivas */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -722,13 +758,21 @@ export default function GestionIncidentes() {
           </div>
         )}
 
-        {/* Modal de confirmación para registrar Garantía en SERVICIOS y pasar a Diagnóstico */}
+        {/* Modal de confirmación con imagen estilizada */}
         {confirmacionGarantia && (
           <div className="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-slate-200 p-6 space-y-4">
-              <h2 className="text-lg font-bold text-slate-800">
-                Confirmar pase a Garantía y Diagnóstico
-              </h2>
+              <div className="flex items-center gap-3">
+                <img
+                  src={IMG_GARANTIA_DIAGNOSTICO}
+                  alt="Garantía en Diagnóstico"
+                  className="w-14 h-14 rounded-2xl object-cover border border-blue-200 shrink-0"
+                />
+                <h2 className="text-lg font-bold text-slate-800">
+                  Confirmar pase a Garantía y Diagnóstico
+                </h2>
+              </div>
+
               <p className="text-sm text-slate-600">
                 Al confirmar que no se resolvió por WhatsApp, el incidente{" "}
                 <span className="font-bold">#{confirmacionGarantia.id}</span>{" "}
